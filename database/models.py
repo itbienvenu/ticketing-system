@@ -1,0 +1,48 @@
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+# from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from database.dbs import Base
+import uuid
+from datetime import datetime, UTC
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    full_name = Column(String, nullable=False)
+    phone_number = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    password = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC))
+    updated_at = Column(DateTime, default=datetime.now(UTC))
+
+    tickets = relationship("Ticket", back_populates="user")
+
+class Bus(Base):
+    __tablename__ = "buses"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    plate_number = Column(String, unique=True, nullable=False)
+    route_id = Column(String, ForeignKey("routes.id"))
+
+    route = relationship("Route", back_populates="buses")
+    tickets = relationship("Ticket", back_populates="bus")
+
+class Route(Base):
+    __tablename__ = "routes"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    origin = Column(String, nullable=False)
+    destination = Column(String, nullable=False)
+    price = Column(Integer, nullable=False)
+
+    buses = relationship("Bus", back_populates="route")
+
+class Ticket(Base):
+    __tablename__ = "tickets"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String, ForeignKey("users.id"))
+    bus_id = Column(String, ForeignKey("buses.id"))
+    qr_code = Column(String, nullable=False)
+    status = Column(String, default="booked")
+    created_at = Column(DateTime, default=datetime.now(UTC))
+
+    user = relationship("User", back_populates="tickets")
+    bus = relationship("Bus", back_populates="tickets")

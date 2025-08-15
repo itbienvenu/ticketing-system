@@ -1,8 +1,12 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import login_router
+from database.dbs import engine
+from database.models import Base
 
 app = FastAPI()
+
+Base.metadata.create_all(bind=engine)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  
