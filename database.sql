@@ -1,8 +1,3 @@
--- ============================================
--- Ticketing System Database
--- Tables: Users, Routes, Buses, Fares, Trips, Tickets, OfflineDevices
--- ============================================
-
 -- 1. Users Table
 CREATE TABLE IF NOT EXISTS Users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
