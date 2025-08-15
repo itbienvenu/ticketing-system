@@ -1,7 +1,7 @@
 .DS_Store
 node_modules
 /dist
-
+.env
 x.html
 __pycache__/
 # local env files
