@@ -3,6 +3,7 @@ node_modules
 /dist
 .env
 x.html
+tickets.db
 __pycache__/
 # local env files
 .env.local
