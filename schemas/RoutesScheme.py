@@ -12,10 +12,11 @@ class RegisterRoute(BaseModel):
     created_at: Optional[datetime] = Field(default_factory=datetime.now(UTC))
     
 class RouteOut(BaseModel):
+    price: int
     id: UUID
     origin: str
     destination: str
-    price: float
+    created_at: datetime
 
 class UpdateRoute(BaseModel):
     origin: Optional[str] = None
