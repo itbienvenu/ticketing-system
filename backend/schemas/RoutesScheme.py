@@ -18,6 +18,9 @@ class RouteOut(BaseModel):
     destination: str
     created_at: datetime
 
+    class Config:
+        from_attributes = True
+
 class UpdateRoute(BaseModel):
     origin: Optional[str] = None
     destination: Optional[str] = None

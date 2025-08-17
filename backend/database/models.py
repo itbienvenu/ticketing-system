@@ -33,6 +33,8 @@ class Route(Base):
     destination = Column(String, nullable=False)
     price = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.now(UTC))
+    updated_at = Column(DateTime, default=datetime.now(UTC))
+
 
     buses = relationship("Bus", back_populates="route")
 

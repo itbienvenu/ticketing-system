@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from methods.functions import register_route, get_current_user
 from database.dbs import get_db
 from sqlalchemy.orm import Session
-from schemas.RoutesScheme import RegisterRoute, RouteOut
+from schemas.RoutesScheme import RegisterRoute, RouteOut, UpdateRoute
 from uuid import UUID
 from database.models import Route
 from typing import List
+from datetime import datetime, UTC
 
 
 router = APIRouter(prefix="/api/v1/routes", tags=['Routes End Points'])
@@ -19,9 +20,31 @@ async def get_route_by_id(route_id: UUID, db: Session = Depends(get_db)):
     get_route = db.query(Route).filter(Route.id == str(route_id)).first()
     if not get_route:
         raise HTTPException(status_code=404, detail="Invalid route ID")
+    if get_route.created_at == None:
+        get_route.created_at = datetime.now(UTC)
     return get_route
 
 
 @router.get("/", response_model=List[RouteOut], dependencies=[Depends(get_current_user)])
 async def get_all_routes(db: Session = Depends(get_db)):
-    return db.query(Route).all()
+    routes =  db.query(Route).all()
+    routes_list = []
+    for r in routes:
+        if r.created_at == None:
+            r.created_at = datetime.now(UTC)
+        routes_list.append(r)
+    return routes_list    
+
+@router.put("/{route_id}", response_model=UpdateRoute, dependencies=[Depends(get_current_user)])
+async def update_route(route_id: UUID, updated_data: UpdateRoute,  db: Session = Depends(get_db)):
+    get_route = db.query(Route).filter(Route.id == str(route_id)).first()
+    if not get_route:
+        raise HTTPException(status_code=404, detail="Invalid Route ID")
+    
+    for field, value in updated_data.model_dump(exclude_unset=True).items():    
+        setattr(get_route, field, value)    
+    get_route.updated_at = datetime.now(UTC)
+
+    db.commit()
+    db.refresh(get_route)
+    return updated_data    
