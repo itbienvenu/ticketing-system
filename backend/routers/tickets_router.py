@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, UTC
 import uuid
 import qrcode
 import io
@@ -18,13 +18,14 @@ from database.dbs import get_db
 
 router = APIRouter(prefix="/api/v1/tickets", tags=['Ticket Managment Endpoint'])
 load_dotenv()
-SECRET_KEY = os.environ.get("TICKET_SECRET_KEY")
+SECRET_KEY = os.environ.get("TICKET_SECRET_KEY") 
+key_bytes = SECRET_KEY.encode()                    # convert to bytes
 
 
 def generate_signed_qr(payload: dict) -> str:
     # create HMAC signature
     data = json.dumps(payload, separators=(',', ':')).encode()
-    signature = hmac.new(SECRET_KEY, data, hashlib.sha256).digest()
+    signature = hmac.new(key_bytes, data, hashlib.sha256).digest()
     token = base64.urlsafe_b64encode(data + b"." + signature).decode()
 
     # generate QR image as base64
@@ -46,21 +47,21 @@ def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    bus = db.query(Bus).filter(Bus.id == ticket_req.bus_id).first()
+    bus = db.query(Bus).filter(Bus.id == str(ticket_req.bus_id)).first()
     if not bus:
         raise HTTPException(status_code=404, detail="Bus not found")
 
-    route = db.query(Route).filter(Route.id == ticket_req.route_id).first()
+    route = db.query(Route).filter(Route.id == str(ticket_req.route_id)).first()
     if not route:
         raise HTTPException(status_code=404, detail="Route not found")
 
     # Prepare payload for QR code (do NOT expose bus/route directly to client)
     payload = {
         "ticket_id": str(uuid.uuid4()),
-        "user_id": ticket_req.user_id,
-        "bus_id": ticket_req.bus_id,
-        "route_id": ticket_req.route_id,
-        "created_at": datetime.utcnow().isoformat()
+        "user_id": str(ticket_req.user_id),
+        "bus_id": str(ticket_req.bus_id),
+        "route_id": str(ticket_req.route_id),
+        "created_at": datetime.now(UTC).isoformat()
     }
 
     qr_base64, signed_token = generate_signed_qr(payload)
@@ -68,12 +69,12 @@ def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
     # Save ticket to DB
     new_ticket = Ticket(
         id=payload["ticket_id"],
-        user_id=ticket_req.user_id,
-        bus_id=ticket_req.bus_id,
-        route_id=ticket_req.route_id,
+        user_id=str(ticket_req.user_id),
+        bus_id=str(ticket_req.bus_id),
+        route_id=str(ticket_req.route_id),
         qr_code=signed_token,
         status="booked",
-        created_at=datetime.utcnow()
+        created_at=datetime.now(UTC)
     )
     db.add(new_ticket)
     db.commit()

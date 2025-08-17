@@ -2,13 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database.models import Bus  
 from database.dbs import get_db  
-from schemas.BusesScheme import BusCreate
+from schemas.BusesScheme import BusCreate, BusOut
 from uuid import uuid4
+from typing import List
 
 router = APIRouter(prefix="/api/v1/buses", tags=["Buses"])
 
 @router.post("/")
-def create_bus(bus: BusCreate, db: Session = Depends(get_db)):
+async def create_bus(bus: BusCreate, db: Session = Depends(get_db)):
     # Check if plate number already exists
     existing_bus = db.query(Bus).filter(Bus.plate_number == bus.plate_number).first()
     if existing_bus:
@@ -22,3 +23,7 @@ def create_bus(bus: BusCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_bus)
     return {"message": "Bus registered successfully", "bus_id": new_bus.id}
+
+@router.get("/", response_model=List[BusOut])
+async def get_all_buses(db: Session = Depends(get_db)):
+    return db.query(Bus).all()
