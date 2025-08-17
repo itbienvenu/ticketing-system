@@ -21,9 +21,10 @@ class Bus(Base):
     __tablename__ = "buses"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     plate_number = Column(String, unique=True, nullable=False)
-    route_id = Column(String, ForeignKey("routes.id"))
+    created_at = Column(DateTime, default=datetime.now(UTC))
+    
 
-    route = relationship("Route", back_populates="buses")
+    # route = relationship("Route", back_populates="buses")
     tickets = relationship("Ticket", back_populates="bus")
 
 class Route(Base):
@@ -36,16 +37,19 @@ class Route(Base):
     updated_at = Column(DateTime, default=datetime.now(UTC))
 
 
-    buses = relationship("Bus", back_populates="route")
+    # buses = relationship("Bus", back_populates="route")
+    tickets = relationship("Ticket", back_populates="route")
 
 class Ticket(Base):
     __tablename__ = "tickets"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String, ForeignKey("users.id"))
     bus_id = Column(String, ForeignKey("buses.id"))
+    route_id = Column(String, ForeignKey("routes.id")) 
     qr_code = Column(String, nullable=False)
     status = Column(String, default="booked")
     created_at = Column(DateTime, default=datetime.now(UTC))
 
     user = relationship("User", back_populates="tickets")
     bus = relationship("Bus", back_populates="tickets")
+    route = relationship("Route", back_populates="tickets")  # link to Route
