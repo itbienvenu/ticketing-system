@@ -19,16 +19,16 @@ from database.dbs import get_db
 router = APIRouter(prefix="/api/v1/tickets", tags=['Ticket Managment Endpoint'])
 load_dotenv()
 SECRET_KEY = os.environ.get("TICKET_SECRET_KEY") 
-key_bytes = SECRET_KEY.encode()                    # convert to bytes
+key_bytes = SECRET_KEY.encode()                    
 
 
 def generate_signed_qr(payload: dict) -> str:
-    # create HMAC signature
+    
     data = json.dumps(payload, separators=(',', ':')).encode()
     signature = hmac.new(key_bytes, data, hashlib.sha256).digest()
     token = base64.urlsafe_b64encode(data + b"." + signature).decode()
 
-    # generate QR image as base64
+    
     qr = qrcode.QRCode(box_size=10, border=4)
     qr.add_data(token)
     qr.make(fit=True)
@@ -36,13 +36,14 @@ def generate_signed_qr(payload: dict) -> str:
     buffered = io.BytesIO()
     img.save(buffered, format="PNG")
     qr_base64 = base64.b64encode(buffered.getvalue()).decode()
+    print(qr)
     return qr_base64, token
 
 
 
 @router.post("/", response_model=TicketResponse)
 def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
-    # Validate user, bus, route existence
+    
     user = db.query(User).filter(User.id == str(ticket_req.user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -54,19 +55,21 @@ def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
     route = db.query(Route).filter(Route.id == str(ticket_req.route_id)).first()
     if not route:
         raise HTTPException(status_code=404, detail="Route not found")
+    
 
-    # Prepare payload for QR code (do NOT expose bus/route directly to client)
+    
     payload = {
         "ticket_id": str(uuid.uuid4()),
         "user_id": str(ticket_req.user_id),
         "bus_id": str(ticket_req.bus_id),
         "route_id": str(ticket_req.route_id),
+        "status": "Booked",
         "created_at": datetime.now(UTC).isoformat()
     }
 
     qr_base64, signed_token = generate_signed_qr(payload)
 
-    # Save ticket to DB
+    
     new_ticket = Ticket(
         id=payload["ticket_id"],
         user_id=str(ticket_req.user_id),
@@ -96,7 +99,7 @@ def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    # Return only QR code + minimal info
+    
     qr_base64, _ = generate_signed_qr({
         "ticket_id": ticket.id,
         "user_id": ticket.user_id,
