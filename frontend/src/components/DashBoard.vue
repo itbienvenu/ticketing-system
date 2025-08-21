@@ -21,10 +21,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import Sidebar from './components/Sidebar.vue'
-import Header from './components/Header.vue'
-import TicketList from './components/TicketList.vue'
-import TicketForm from './components/TicketForm.vue'
+import Sidebar from './SideBar.vue'
+import Header from './HeaderBar.vue'
+import TicketList from './TicketList.vue'
+import TicketForm from './TicketForm.vue'
 
 const user = ref({})
 const tickets = ref([])
@@ -38,24 +38,24 @@ const fetchUser = async () => {
       }
     })
     user.value = response.data
+    fetchTickets(user.value.id)
   } catch (err) {
     console.error('Failed to fetch user', err)
   }
 }
 
-const fetchTickets = async () => {
+const fetchTickets = async (userId) => {
   try {
     const token = localStorage.getItem('access_token')
-    const response = await axios.get('http://127.0.0.1:8000/api/v1/tickets', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    const response = await axios.get(`http://127.0.0.1:8000/api/v1/tickets/users/${userId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     })
     tickets.value = response.data
   } catch (err) {
     console.error('Failed to fetch tickets', err)
   }
 }
+
 
 onMounted(() => {
   fetchUser()
