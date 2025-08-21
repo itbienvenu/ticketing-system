@@ -15,8 +15,5 @@
       "dom.iterable",
       "scripthost"
     ]
-  },
-  "exclude": [
-    "src/router/views/RegisterView.vue"
-  ]
+  }
 }
