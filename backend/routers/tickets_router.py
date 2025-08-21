@@ -16,6 +16,8 @@ from database.models import Ticket, User, Bus, Route
 from schemas.TicketsScheme import TicketCreate, TicketResponse
 from database.dbs import get_db 
 
+from methods.functions import get_current_user
+
 router = APIRouter(prefix="/api/v1/tickets", tags=['Ticket Managment Endpoint'])
 load_dotenv()
 SECRET_KEY = os.environ.get("TICKET_SECRET_KEY") 
@@ -41,7 +43,7 @@ def generate_signed_qr(payload: dict) -> str:
 
 
 
-@router.post("/", response_model=TicketResponse)
+@router.post("/", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
 def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
     
     user = db.query(User).filter(User.id == str(ticket_req.user_id)).first()
@@ -93,7 +95,7 @@ def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
 
 
 
-@router.get("/{ticket_id}", response_model=TicketResponse)
+@router.get("/{ticket_id}", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
 def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:
@@ -118,7 +120,7 @@ def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
 
 
 
-@router.get("/users/{user_id}", response_model=list[TicketResponse])
+@router.get("/users/{user_id}", response_model=list[TicketResponse], dependencies=[Depends(get_current_user)])
 def list_user_tickets(user_id: str, db: Session = Depends(get_db)):
     tickets = db.query(Ticket).filter(Ticket.user_id == str(user_id)).all()
     response = []
@@ -141,7 +143,7 @@ def list_user_tickets(user_id: str, db: Session = Depends(get_db)):
 
 
 
-@router.patch("/{ticket_id}/status", response_model=TicketResponse)
+@router.patch("/{ticket_id}/status", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
 def update_ticket_status(ticket_id: str, status: str, db: Session = Depends(get_db)):
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:

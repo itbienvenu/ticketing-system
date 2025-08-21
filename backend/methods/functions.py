@@ -87,7 +87,7 @@ def login_user(db: Session, user: LoginUser):
     return {
         "message":"Login Successful",
         "access_token":token,
-        "torkn_type": "bearer"
+        "token_type": "bearer"
             }
 
 def register_route(db: Session, route: RegisterRoute):

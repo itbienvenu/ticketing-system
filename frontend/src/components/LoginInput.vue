@@ -85,10 +85,7 @@ async function login() {
     }, {
       headers: { 'Content-Type': 'application/json' }
     })
-
-    // console.log("Login response:", response.data)
-
-    // Store token
+    
     localStorage.setItem("access_token", response.data.access_token)
     localStorage.setItem("token_type", response.data.token_type)
 
