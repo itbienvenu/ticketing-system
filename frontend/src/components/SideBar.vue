@@ -6,7 +6,7 @@
         <a class="nav-link text-white" href="#">Dashboard</a>
       </li>
       <li class="nav-item mb-2">
-        <a class="nav-link text-white" href="#">Tickets</a>
+        <router-link class="nav-link text-white" to="/routes">Routes</router-link>
       </li>
       <li class="nav-item mb-2">
         <a class="nav-link text-white" href="#">Settings</a>

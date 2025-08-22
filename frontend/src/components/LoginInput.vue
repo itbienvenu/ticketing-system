@@ -40,6 +40,8 @@
         <div class="form-check mb-3">
           <input v-model="remember" type="checkbox" class="form-check-input" id="rememberMe">
           <label class="form-check-label text-muted" for="rememberMe">Remember me</label>
+          <br>
+          
         </div>
 
         <!-- Submit Button -->
@@ -52,7 +54,10 @@
           <span v-if="!loading">Login</span>
           <span v-else class="spinner-border spinner-border-sm text-white" role="status"></span>
         </button>
-
+        <br>
+        <p>
+          If you don't have an account register <a href="/register">here</a>.
+        </p>
         <!-- Error Message -->
         <p v-if="errorMessage" class="text-danger mt-2">{{ errorMessage }}</p>
       </form>

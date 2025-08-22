@@ -25,22 +25,20 @@ key_bytes = SECRET_KEY.encode()
 
 
 def generate_signed_qr(payload: dict) -> str:
-    
-    data = json.dumps(payload, separators=(',', ':')).encode()
-    signature = hmac.new(key_bytes, data, hashlib.sha256).digest()
-    token = base64.urlsafe_b64encode(data + b"." + signature).decode()
+    ticket_id = payload["ticket_id"].encode()  # only ticket_id
+    signature = hmac.new(key_bytes, ticket_id, hashlib.sha256).digest()
+    token = base64.urlsafe_b64encode(ticket_id + b"." + signature).decode()
 
-    
     qr = qrcode.QRCode(box_size=10, border=4)
     qr.add_data(token)
     qr.make(fit=True)
     img = qr.make_image(fill="black", back_color="white")
+
     buffered = io.BytesIO()
     img.save(buffered, format="PNG")
     qr_base64 = base64.b64encode(buffered.getvalue()).decode()
-    print(qr)
-    return qr_base64, token
 
+    return qr_base64, token
 
 
 @router.post("/", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
@@ -135,7 +133,7 @@ def list_user_tickets(user_id: str, db: Session = Depends(get_db)):
         response.append(TicketResponse(
             id=t.id,
             user_id=t.user_id,
-            qr_code=qr_base64,
+            qr_code=t.qr_code,
             status=t.status,
             created_at=t.created_at
         ))
