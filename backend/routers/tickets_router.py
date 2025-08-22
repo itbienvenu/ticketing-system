@@ -100,30 +100,21 @@ async def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    
-    qr_base64, _ = generate_signed_qr({
-        "ticket_id": ticket.id,
-        "user_id": ticket.user_id,
-        "bus_id": ticket.bus_id,
-        "route_id": ticket.route_id,
-        "created_at": ticket.created_at.isoformat()
-    })
-
     return TicketResponse(
         id=ticket.id,
         user_id=ticket.user_id,
-        qr_code=qr_base64,
+        qr_code=ticket.qr_code,
         status=ticket.status,
-        created_at=ticket.created_at
+        created_at=ticket.created_at,
+        mode=ticket.mode
     )
 
 # Soft deleting the ticket by user
 
 @router.put("/{ticket_id}", dependencies=[Depends(get_current_user)])
-async def delete_ticket(ticket_id: UUID, db: Session = Depends(get_db)):
+async def delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
     # find ticket
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
-    
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
 

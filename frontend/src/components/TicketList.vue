@@ -7,6 +7,7 @@
           <th>Status</th>
           <th>Created At</th>
           <th>QR Code</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -23,6 +24,16 @@
               :bg-color="'#f0f0ff'"
             />
           </td>
+          <td>
+            <div>
+            <span style="margin: 10px;">
+              <button class="btn btn-sm btn-warning">Cancel Ticket</button>
+            </span>
+            <span>
+              <button class="btn btn-sm btn-danger" v-on:click="deleteTicket(ticket.id)">Delete Ticket</button>
+            </span>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -32,7 +43,10 @@
 
 <script setup>
 /* eslint-disable */
+import axios from 'axios';
 import QrcodeVue from 'qrcode.vue'
+
+
 
 const props = defineProps({
   tickets: {
@@ -40,6 +54,24 @@ const props = defineProps({
     required: true
   }
 })
+
+const  deleteTicket = async (ticket_id) => {
+    try {
+    const token = localStorage.getItem('access_token')
+    const response = await axios.put(`http://127.0.0.1:8000/api/v1/tickets/${ticket_id}`,
+    {},
+
+    {
+      headers: {Authorization : `Bearer ${token}`}
+    })
+    console.log(response.data)
+    tickets.value = tickets.value.filter(t => t.id !== ticketId);
+    }
+    catch (err) {
+      console.log("Delete ticker error", err)
+    }
+}
+
 </script>
 
 <style scoped>
