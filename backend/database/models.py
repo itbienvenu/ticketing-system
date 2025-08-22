@@ -48,6 +48,7 @@ class Ticket(Base):
     route_id = Column(String, ForeignKey("routes.id")) 
     qr_code = Column(String, nullable=False)
     status = Column(String, default="booked")
+    mode = Column(String, default="active")
     created_at = Column(DateTime, default=datetime.now(UTC))
 
     user = relationship("User", back_populates="tickets")

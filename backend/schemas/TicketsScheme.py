@@ -15,6 +15,7 @@ class TicketResponse(BaseModel):
     qr_code: str
     status: str
     created_at: datetime
+    mode: str
 
     class Config:
         from_attributes = True  

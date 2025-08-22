@@ -27,9 +27,13 @@ def change_something():
     # # cursor.execute("""ALTER TABLE tickets ADD COLUMN route_id TEXT;
     # #     """)
 
-    # cursor.execute("ALTER table users ADD COLUMN role")
-    # cursor.execute("DROP TABLE IF EXISTS buses;")
+    # cursor.execute("")
+    # cursor.execute("""ALTER TABLE tickets ADD COLUMN status ENUM('active', 'cancelled', 'deleted') DEFAULT 'active';""")
     # cursor.execute("PRAGMA foreign_keys=ON;")
+#     cursor.execute("""
+#     ALTER TABLE tickets 
+#     ADD COLUMN mode TEXT CHECK(mode IN ('active', 'cancelled', 'deleted')) DEFAULT 'active';
+# """)
     # conn.commit()
 
     conn.close()

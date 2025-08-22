@@ -9,6 +9,7 @@ import json
 import hmac
 import hashlib
 import os
+from uuid import UUID
 
 from dotenv import load_dotenv
 
@@ -24,7 +25,7 @@ SECRET_KEY = os.environ.get("TICKET_SECRET_KEY")
 key_bytes = SECRET_KEY.encode()                    
 
 
-def generate_signed_qr(payload: dict) -> str:
+async def generate_signed_qr(payload: dict) -> str:
     ticket_id = payload["ticket_id"].encode()  # only ticket_id
     signature = hmac.new(key_bytes, ticket_id, hashlib.sha256).digest()
     token = base64.urlsafe_b64encode(ticket_id + b"." + signature).decode()
@@ -42,7 +43,7 @@ def generate_signed_qr(payload: dict) -> str:
 
 
 @router.post("/", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
-def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
+async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
     
     user = db.query(User).filter(User.id == str(ticket_req.user_id)).first()
     if not user:
@@ -94,7 +95,7 @@ def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{ticket_id}", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
-def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
+async def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
@@ -116,27 +117,47 @@ def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
         created_at=ticket.created_at
     )
 
+# Soft deleting the ticket by user
 
+@router.put("/{ticket_id}", dependencies=[Depends(get_current_user)])
+async def delete_ticket(ticket_id: UUID, db: Session = Depends(get_db)):
+    # find ticket
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    # update status instead of hard deleting
+    ticket.mode = "deleted"
+    db.commit()
+    db.refresh(ticket)
+
+    return {"message": "Ticket marked as deleted", "ticket_id": str(ticket.id), "status": ticket.status}
 
 @router.get("/users/{user_id}", response_model=list[TicketResponse], dependencies=[Depends(get_current_user)])
-def list_user_tickets(user_id: str, db: Session = Depends(get_db)):
-    tickets = db.query(Ticket).filter(Ticket.user_id == str(user_id)).all()
+async def list_user_tickets(user_id: str, db: Session = Depends(get_db)):
+    tickets = db.query(Ticket).filter(
+        Ticket.user_id == str(user_id),
+        Ticket.mode == 'active'
+        ).all()
     response = []
     for t in tickets:
-        qr_base64, _ = generate_signed_qr({
-            "ticket_id": t.id,
-            "user_id": t.user_id,
-            "bus_id": t.bus_id,
-            "route_id": t.route_id,
-            "created_at": t.created_at.isoformat()
-        })
+        # qr_base64, _ = generate_signed_qr({
+        #     "ticket_id": t.id,
+        #     "user_id": t.user_id,
+        #     "bus_id": t.bus_id,
+        #     "route_id": t.route_id,
+        #     "created_at": t.created_at.isoformat()
+        # })
         response.append(TicketResponse(
             id=t.id,
             user_id=t.user_id,
             qr_code=t.qr_code,
             status=t.status,
-            created_at=t.created_at
+            created_at=t.created_at,
+            mode=t.mode
         ))
+
     return response
 
 
