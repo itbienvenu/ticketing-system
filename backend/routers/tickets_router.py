@@ -68,7 +68,7 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
         "created_at": datetime.now(UTC).isoformat()
     }
 
-    qr_base64, signed_token = generate_signed_qr(payload)
+    qr_base64, signed_token = await generate_signed_qr(payload)
 
     
     new_ticket = Ticket(
@@ -78,7 +78,8 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
         route_id=str(ticket_req.route_id),
         qr_code=signed_token,
         status="booked",
-        created_at=datetime.now(UTC)
+        created_at=datetime.now(UTC),
+        mode='active'
     )
     db.add(new_ticket)
     db.commit()
@@ -89,7 +90,8 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
         user_id=new_ticket.user_id,
         qr_code=qr_base64,
         status=new_ticket.status,
-        created_at=new_ticket.created_at
+        created_at=new_ticket.created_at,
+        mode=new_ticket.mode
     )
 
 
