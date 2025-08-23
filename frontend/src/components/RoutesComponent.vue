@@ -181,7 +181,10 @@ export default {
         this.closeModal();
       } catch (err) {
         console.error("Failed to book ticket:", err);
-        alert("Error booking ticket!");
+
+  // Show backend error detail if available
+  const message = err.response?.data?.detail || "Error booking ticket!";
+  alert(message);
       }
     },
   },
