@@ -1,6 +1,16 @@
 <template>
   <div class="p-4">
     <h3>Available Routes</h3>
+
+    <!-- Search box -->
+    <input
+      v-model="search"
+      type="text"
+      class="form-control mb-3"
+      placeholder="Search by origin or destination..."
+    />
+
+    <!-- Routes Table -->
     <table border="1" cellpadding="8" cellspacing="0" width="100%">
       <thead>
         <tr>
@@ -11,7 +21,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="route in routes" :key="route.id">
+        <tr v-for="route in paginatedRoutes" :key="route.id">
           <td style="text-align: left;">{{ route.origin }}</td>
           <td style="text-align: left;">{{ route.destination }}</td>
           <td class="text-end">{{ route.price }}</td>
@@ -23,6 +33,25 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Pagination controls -->
+    <div class="mt-3 d-flex justify-content-between align-items-center">
+      <button
+        class="btn btn-secondary btn-sm"
+        :disabled="currentPage === 1"
+        @click="currentPage--"
+      >
+        Previous
+      </button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button
+        class="btn btn-secondary btn-sm"
+        :disabled="currentPage === totalPages"
+        @click="currentPage++"
+      >
+        Next
+      </button>
+    </div>
 
     <!-- Bus Selection Modal -->
     <div class="modal fade" tabindex="-1" ref="busModal">
@@ -53,11 +82,9 @@
 </template>
 
 <script>
-
 import axios from "axios";
-import { nextTick} from "vue";
-import * as bootstrap from 'bootstrap';
-
+import { nextTick } from "vue";
+import * as bootstrap from "bootstrap";
 
 export default {
   name: "RoutesComponent",
@@ -66,12 +93,31 @@ export default {
       routes: [],
       buses: [],
       selectedRoute: {},
+      search: "",
+      currentPage: 1,
+      perPage: 10, // adjust how many rows per page
     };
   },
   computed: {
+    // Filter routes by search
+    filteredRoutes() {
+      return this.routes.filter((r) =>
+        `${r.origin} ${r.destination}`
+          .toLowerCase()
+          .includes(this.search.toLowerCase())
+      );
+    },
+    // Calculate total pages
+    totalPages() {
+      return Math.ceil(this.filteredRoutes.length / this.perPage);
+    },
+    // Slice filtered routes for current page
+    paginatedRoutes() {
+      const start = (this.currentPage - 1) * this.perPage;
+      return this.filteredRoutes.slice(start, start + this.perPage);
+    },
+    // For now, show all buses (backend does not filter yet)
     filteredBuses() {
-      // For now, show only buses whose route_id matches selectedRoute.id
-      // return this.buses.filter((b) => b.route_id === this.selectedRoute.id);
       return this.buses;
     },
   },
@@ -86,7 +132,7 @@ export default {
       .then((res) => (this.routes = res.data))
       .catch((err) => console.error("Error fetching routes:", err));
 
-    // Fetch all buses (later filtered by route)
+    // Fetch all buses
     axios
       .get("http://127.0.0.1:8000/api/v1/buses", {
         headers: { Authorization: `Bearer ${token}` },
@@ -129,7 +175,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-/* optional styling for modal or table */
-</style>
