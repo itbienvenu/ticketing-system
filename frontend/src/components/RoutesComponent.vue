@@ -26,7 +26,7 @@
           <td style="text-align: left;">{{ route.destination }}</td>
           <td class="text-end">{{ route.price }}</td>
           <td>
-            <button class="btn btn-primary btn-sm" @click="openBusModal(route)">
+            <button class="btn btn-primary btn-sm" @click="openBusModal(route.id)">
               Book
             </button>
           </td>
@@ -74,6 +74,9 @@
                 <button class="btn btn-success btn-sm" @click="bookTicket(bus)">Select</button>
               </li>
             </ul>
+            <div v-if="filteredBuses.length === 0" class="text-center mt-2">
+              No buses available for this route.
+            </div>
           </div>
         </div>
       </div>
@@ -95,28 +98,26 @@ export default {
       selectedRoute: {},
       search: "",
       currentPage: 1,
-      perPage: 10, // adjust how many rows per page
+      perPage: 10,
     };
   },
   computed: {
     // Filter routes by search
     filteredRoutes() {
       return this.routes.filter((r) =>
-        `${r.origin} ${r.destination}`
-          .toLowerCase()
-          .includes(this.search.toLowerCase())
+        `${r.origin} ${r.destination}`.toLowerCase().includes(this.search.toLowerCase())
       );
     },
     // Calculate total pages
     totalPages() {
-      return Math.ceil(this.filteredRoutes.length / this.perPage);
+      return Math.ceil(this.filteredRoutes.length / this.perPage) || 1;
     },
     // Slice filtered routes for current page
     paginatedRoutes() {
       const start = (this.currentPage - 1) * this.perPage;
       return this.filteredRoutes.slice(start, start + this.perPage);
     },
-    // For now, show all buses (backend does not filter yet)
+    // Show buses fetched for selected route
     filteredBuses() {
       return this.buses;
     },
@@ -124,33 +125,44 @@ export default {
   mounted() {
     const token = localStorage.getItem("access_token");
 
-    // Fetch routes
+    // Fetch all routes
     axios
       .get("http://127.0.0.1:8000/api/v1/routes", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => (this.routes = res.data))
       .catch((err) => console.error("Error fetching routes:", err));
-
-    // Fetch all buses
-    axios
-      .get("http://127.0.0.1:8000/api/v1/buses", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => (this.buses = res.data))
-      .catch((err) => console.error("Error fetching buses:", err));
   },
   methods: {
-    async openBusModal(route) {
+    async openBusModal(route_id) {
+      // Find the selected route
+      const route = this.routes.find((r) => r.id === route_id);
       this.selectedRoute = route;
+
+      // Fetch buses for this route only
+      const token = localStorage.getItem("access_token");
+      try {
+        const res = await axios.get(`http://127.0.0.1:8000/api/v1/buses/by-route/${route_id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        this.buses = res.data;
+      } catch (err) {
+        console.error("Error fetching buses for route:", err);
+        this.buses = [];
+      }
+
+      // Show modal
       await nextTick();
       const modal = new bootstrap.Modal(this.$refs.busModal);
       modal.show();
     },
+
     closeModal() {
       const modal = bootstrap.Modal.getInstance(this.$refs.busModal);
       modal.hide();
+      this.buses = [];
     },
+
     async bookTicket(bus) {
       try {
         const token = localStorage.getItem("access_token");
@@ -175,3 +187,7 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* Optional styling for modal or table */
+</style>
