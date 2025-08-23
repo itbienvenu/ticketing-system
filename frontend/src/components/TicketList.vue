@@ -45,7 +45,7 @@
 /* eslint-disable */
 import axios from 'axios';
 import QrcodeVue from 'qrcode.vue'
-
+import { ref, watch} from 'vue'
 
 
 const props = defineProps({
@@ -55,17 +55,32 @@ const props = defineProps({
   }
 })
 
+const tickets = ref([...props.tickets])
+
+watch(
+  () => props.tickets,
+  (newVal) => {
+    tickets.value = [...newVal]
+  }
+)
+
 const  deleteTicket = async (ticket_id) => {
     try {
     const token = localStorage.getItem('access_token')
+    const confirmed = window.confirm("Do you want to delete this ticket")
+    if (!confirmed) {
+      return;
+    }
     const response = await axios.put(`http://127.0.0.1:8000/api/v1/tickets/${ticket_id}`,
     {},
 
     {
       headers: {Authorization : `Bearer ${token}`}
     })
-    console.log(response.data)
-    tickets.value = tickets.value.filter(t => t.id !== ticketId);
+    if(response.data){
+      tickets.value = tickets.value.filter(t => t.id !== ticket_id)
+
+    }
     }
     catch (err) {
       console.log("Delete ticker error", err)

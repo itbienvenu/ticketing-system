@@ -24,8 +24,8 @@ def change_something():
     # f = cursor.execute("""DROP TABLE buses""")
     # if f:
     #     print("Deleted")
-    # # cursor.execute("""ALTER TABLE tickets ADD COLUMN route_id TEXT;
-    # #     """)
+    # cursor.execute("""ALTER TABLE bus_routes ADD COLUMN id TEXT PRIMARY KEY ;
+    #   """)
 
     # cursor.execute("")
     # cursor.execute("""ALTER TABLE tickets ADD COLUMN status ENUM('active', 'cancelled', 'deleted') DEFAULT 'active';""")

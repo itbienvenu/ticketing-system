@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table
 # from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from database.dbs import Base
@@ -17,18 +17,33 @@ class User(Base):
 
     tickets = relationship("Ticket", back_populates="user")
 
+bus_routes = Table(
+    "bus_routes",
+    Base.metadata,
+
+    Column("bus_id", String, ForeignKey("buses.id"), primary_key=True),
+    Column("route_id", String, ForeignKey("routes.id"), primary_key=True)
+)
+
 class Bus(Base):
     __tablename__ = "buses"
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     plate_number = Column(String, unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.now(UTC))
-    
 
-    # route = relationship("Route", back_populates="buses")
+    # many-to-many with routes
+    routes = relationship(
+        "Route",
+        secondary=bus_routes,
+        back_populates="buses"
+    )
+
     tickets = relationship("Ticket", back_populates="bus")
 
 class Route(Base):
     __tablename__ = "routes"
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     origin = Column(String, nullable=False)
     destination = Column(String, nullable=False)
@@ -36,9 +51,15 @@ class Route(Base):
     created_at = Column(DateTime, default=datetime.now(UTC))
     updated_at = Column(DateTime, default=datetime.now(UTC))
 
+    # many-to-many with buses
+    buses = relationship(
+        "Bus",
+        secondary=bus_routes,
+        back_populates="routes"
+    )
 
-    # buses = relationship("Bus", back_populates="route")
     tickets = relationship("Ticket", back_populates="route")
+
 
 class Ticket(Base):
     __tablename__ = "tickets"
