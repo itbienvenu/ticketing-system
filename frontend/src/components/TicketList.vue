@@ -22,10 +22,13 @@
               </td>
               <td class="px-3 py-2 align-middle text-sm text-secondary">{{ new Date(ticket.created_at).toLocaleString() }}</td>
               <td class="px-3 py-2 align-middle">
-                <!-- Replaced QrcodeVue with a simple div for demonstration -->
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width: 80px; height: 80px; font-size: 0.75rem;">
-                  QR Code
-                </div>
+                <qrcode-vue
+                  :value="ticket.qr_code"
+                  :size="80"
+                  :level="'H'"
+                  :fg-color="'#000000'"
+                  :bg-color="'#ffffff'"
+                />
               </td>
               <td class="px-3 py-2 align-middle">
                 <div class="d-flex flex-nowrap">
@@ -142,6 +145,7 @@
 <script setup>
 /* eslint-disable */
 import axios from 'axios';
+import QrcodeVue from 'qrcode.vue';
 import { ref, watch } from 'vue';
 
 const props = defineProps({
@@ -161,7 +165,7 @@ const paymentProvider = ref('');
 const loading = ref(false);
 const message = ref('');
 
-// Watch for changes in the props and update the local state
+
 watch(
   () => props.tickets,
   (newVal) => {
@@ -181,9 +185,6 @@ const payTicket = (ticket_id) => {
   message.value = '';
 };
 
-/**
- * Handles the payment process by sending a request to the API.
- */
 const handlePayment = async () => {
   if (!phoneNumber.value || !paymentProvider.value) {
     message.value = 'Please enter a phone number and select a payment provider.';
@@ -209,11 +210,10 @@ const handlePayment = async () => {
     });
 
     if (response.data) {
-      message.value = 'Payment successful!';
-      // Update the ticket status in the local state
+      message.value = response.data.detail;
       const ticketIndex = tickets.value.findIndex(t => t.id === ticketToPayId.value);
       if (ticketIndex !== -1) {
-        tickets.value[ticketIndex].status = 'Paid';
+        tickets.value[ticketIndex].status = t.status;
       }
       setTimeout(() => {
         closePaymentModal();
@@ -237,9 +237,6 @@ const confirmDelete = (ticket_id) => {
   showDeleteModal.value = true;
 };
 
-/**
- * Deletes the ticket after user confirmation.
- */
 const executeDelete = async () => {
   try {
     const token = localStorage.getItem('access_token');
@@ -257,17 +254,13 @@ const executeDelete = async () => {
   }
 };
 
-/**
- * Closes the payment modal.
- */
+
 const closePaymentModal = () => {
   showPaymentModal.value = false;
   ticketToPayId.value = null;
 };
 
-/**
- * Closes the delete confirmation modal.
- */
+
 const closeDeleteModal = () => {
   showDeleteModal.value = false;
   ticketToDeleteId.value = null;
