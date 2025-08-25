@@ -26,6 +26,9 @@ def initiate_payment(
     # 3. Create Payment record
 
     ticket.status = "pending payment"
+    verify_ticket_availability = db.query(Payment).filter(Payment.ticket_id == ticket.id).first()
+    if verify_ticket_availability:
+        raise HTTPException(status_code=403, detail="Trip payment has been initialized")
     new_payment = Payment(
         id=str(uuid4()),
         ticket_id=str(ticket.id),
