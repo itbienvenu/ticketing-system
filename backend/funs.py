@@ -29,13 +29,24 @@ def change_something():
 
     # cursor.execute("")
     # cursor.execute("""ALTER TABLE tickets ADD COLUMN status ENUM('active', 'cancelled', 'deleted') DEFAULT 'active';""")
-    # cursor.execute("PRAGMA foreign_keys=ON;")
+    # cursor.execute("DROP table payments")
 #     cursor.execute("""
 #     ALTER TABLE tickets 
 #     ADD COLUMN mode TEXT CHECK(mode IN ('active', 'cancelled', 'deleted')) DEFAULT 'active';
 # """)
     # conn.commit()
 
+#     cursor.execute("""
+#     SELECT name FROM sqlite_master WHERE type='table' AND name='payments';
+# """)
+#     table_exists = cursor.fetchone()
+
+#     if table_exists:
+#         cursor.execute("DROP TABLE payments")
+
+#     print("no table")    
+
+
     conn.close()
 
-# change_something()
+change_something()

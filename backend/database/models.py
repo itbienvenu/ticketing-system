@@ -1,9 +1,10 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table, Float, Enum
 # from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from database.dbs import Base
 import uuid
 from datetime import datetime, UTC
+import enum
 
 class User(Base):
     __tablename__ = "users"
@@ -16,6 +17,7 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.now(UTC))
 
     tickets = relationship("Ticket", back_populates="user")
+    payments = relationship("Payment", back_populates="user")
 
 bus_routes = Table(
     "bus_routes",
@@ -75,3 +77,26 @@ class Ticket(Base):
     user = relationship("User", back_populates="tickets")
     bus = relationship("Bus", back_populates="tickets")
     route = relationship("Route", back_populates="tickets")  # link to Route
+    payments = relationship("Payment", back_populates="ticket") # link to payments tble
+
+# The payment 
+
+class PaymentStatus(str, enum.Enum):
+    pending = "pending"
+    success = "success"
+    failed = "failed"
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(String, primary_key=True, index=True)
+    ticket_id = Column(String, ForeignKey("tickets.id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    phone_number = Column(String(20), nullable=False) 
+    amount = Column(Float, nullable=False)
+    provider = Column(String(50), nullable=False)
+    status = Column(Enum(PaymentStatus), default=PaymentStatus.pending)
+    created_at = Column(DateTime, default=datetime.now(UTC))
+
+    ticket = relationship("Ticket", back_populates="payments")
+    user = relationship("User", back_populates="payments")
