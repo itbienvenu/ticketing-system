@@ -37,6 +37,7 @@ import Header from './HeaderBar.vue'
 import TicketList from './TicketList.vue'
 import TicketForm from './TicketForm.vue'
 import Routes from './RoutesComponent.vue'
+import router from '@/router/router'
 
 const user = ref({})
 const tickets = ref([])
@@ -49,6 +50,9 @@ const fetchUser = async () => {
       headers: { Authorization: `Bearer ${token}` }
     })
     user.value = response.data
+    if (response.data.role == "admin") {
+      router.push('/admin')
+    }
     fetchTickets(user.value.id)
   } catch (err) {
     console.error('Failed to fetch user', err)
