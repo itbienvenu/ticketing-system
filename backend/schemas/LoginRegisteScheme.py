@@ -16,3 +16,10 @@ class LoginUser(BaseModel):
     email: Optional[EmailStr] = None
     phone_number: Optional[str] = None
     password: str
+
+
+class UpdateUser(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
+    role: Optional[str] = None

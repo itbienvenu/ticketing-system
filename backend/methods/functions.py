@@ -36,6 +36,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
+        role: str = payload.get("role")
         if user_id is None:
             raise credentials_exception
     except JWTError:
@@ -83,7 +84,12 @@ def login_user(db: Session, user: LoginUser):
     
     if not verify_password(user.password, check_user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token(data={"sub":str(check_user.id)}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    token = create_access_token(
+        data={
+            "sub":str(check_user.id),
+            "role": str(check_user.role)
+            }, 
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {
         "message":"Login Successful",
         "access_token":token,

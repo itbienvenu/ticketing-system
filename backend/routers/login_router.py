@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Body
 from methods.functions import create_user, login_user, get_current_user
-from schemas.LoginRegisteScheme import RegisterUser, LoginUser
+from schemas.LoginRegisteScheme import RegisterUser, LoginUser, UpdateUser
 from database.dbs import get_db
 from database.models import *
 from sqlalchemy.orm import Session
@@ -23,5 +23,26 @@ async def get_users_me(current_user: User = Depends(get_current_user)):
         "id":str(current_user.id),
         "full_name": current_user.full_name,
         "email":current_user.email,
-        "phone_number":current_user.phone_number
+        "phone_number":current_user.phone_number,
+        "role":current_user.role
     }
+
+@router.patch("/{user_id}",response_model=UpdateUser)
+async def update_user(
+    user_id: str, 
+    db: Session = Depends(get_db), 
+    user: UpdateUser = Body(...),
+    current_user = Depends(get_current_user)
+    ):
+    get_user = db.query(User).filter(User.id == str(user_id)).first()
+
+    if not get_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    updated_data = user.model_dump(exclude_unset=True)
+    for key, value in updated_data.items():
+        setattr(get_user, key, value)
+
+    db.commit()
+    db.refresh(get_user)
+    return get_user    
+

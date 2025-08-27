@@ -49,4 +49,4 @@ def change_something():
 
     conn.close()
 
-change_something()
+# change_something()

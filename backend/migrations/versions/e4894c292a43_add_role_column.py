@@ -1,8 +1,8 @@
-"""Fix payments column types
+"""add role column
 
-Revision ID: 9100363cb077
-Revises: 71a4bfdf4bf7
-Create Date: 2025-08-25 12:40:11.997757
+Revision ID: e4894c292a43
+Revises: 
+Create Date: 2025-08-27 13:11:07.846339
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '9100363cb077'
-down_revision: Union[str, Sequence[str], None] = '71a4bfdf4bf7'
+revision: str = 'e4894c292a43'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
