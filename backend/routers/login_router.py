@@ -45,7 +45,7 @@ def delete_user(user_id, db: Session = Depends(get_db)):
 
 # Endpoint to Edit User
 
-@router.patch("/{user_id}",response_model=UpdateUser)
+@router.patch("/users/{user_id}",response_model=UpdateUser)
 async def update_user(
     user_id: str, 
     db: Session = Depends(get_db), 

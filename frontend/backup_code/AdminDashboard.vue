@@ -1,4 +1,3 @@
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
 <template>
   <div class="d-flex vh-100 bg-light">
     <AdminSidebar @navigate="activeTab = $event" />
@@ -38,6 +37,7 @@ const API_BASE = process.env.VUE_APP_API_BASE_URL;
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+const API_BASE = process.env.VUE_APP_API_BASE_URL;
 
 import AdminSidebar from './AdminSidebar.vue';
 import HeaderBar from './HeaderBar.vue';
@@ -53,10 +53,10 @@ const activeTab = ref('dashboard');
 const fetchAdminUser = async () => {
   try {
     const token = localStorage.getItem('access_token');
-    const response = await axios.get('http://127.0.0.1:8000/api/v1/me', {
+    const response = await axios.get(`${API_BASE}/me`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (response.data.is_admin) {
+    if (response.data.role == 'admin') {
       adminUser.value = response.data;
     } else {
       console.error('Unauthorized access. User is not an admin.');

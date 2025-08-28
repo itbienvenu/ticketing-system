@@ -113,7 +113,7 @@ def update_bus(bus_id: str, bus_update: UpdateBus, db: Session = Depends(get_db)
 
 # Endpoint to delete the Bus
 
-@router.delete("/users/{bus_id}", dependencies=[Depends(get_db)])
+@router.delete("/{bus_id}", dependencies=[Depends(get_db)])
 
 def delete_bus(bus_id: str, db: Session = Depends(get_db)):
     bus = db.query(Bus).filter(Bus.id == bus_id).first()

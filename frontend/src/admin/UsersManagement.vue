@@ -30,12 +30,18 @@
         <tbody>
           <tr v-for="user in filteredUsers" :key="user.id">
             <td>
-  <span>{{ showFull[user.id] ? user.id : user.id.slice(0, 5) + '...' }}</span>
-  <button @click="toggleShow(user.id)" class="btn btn-sm btn-outline-secondary">
-    <i :class="showFull[user.id] ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-  </button>
-</td>
-
+              <span>{{
+                showFull[user.id] ? user.id : user.id.slice(0, 5) + "..."
+              }}</span>
+              <button
+                @click="toggleShow(user.id)"
+                class="btn btn-sm btn-outline-secondary"
+              >
+                <i
+                  :class="showFull[user.id] ? 'fas fa-eye-slash' : 'fas fa-eye'"
+                ></i>
+              </button>
+            </td>
 
             <td>{{ user.full_name }}</td>
             <td>{{ user.email }}</td>
@@ -91,7 +97,7 @@
                   type="text"
                   class="form-control"
                   id="name"
-                  v-model="currentUser.name"
+                  v-model="currentUser.full_name"
                   required
                 />
               </div>
@@ -102,6 +108,16 @@
                   class="form-control"
                   id="email"
                   v-model="currentUser.email"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">Phone Number</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="phone"
+                  v-model="currentUser.phone_number"
                   required
                 />
               </div>
@@ -118,16 +134,15 @@
                   >Leave blank to keep current password.</small
                 >
               </div>
-              <div class="form-check mb-3">
+              <div class="mb-3">
+                <label for="email" class="form-label">Role</label>
                 <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="isAdmin"
-                  v-model="currentUser.is_admin"
+                  type="text"
+                  class="form-control"
+                  id="role"
+                  v-model="currentUser.role"
+                  required
                 />
-                <label class="form-check-label" for="isAdmin">
-                  Admin User
-                </label>
               </div>
               <div class="d-flex justify-content-end">
                 <button
@@ -155,7 +170,6 @@ import { nextTick } from "vue";
 import * as bootstrap from "bootstrap";
 const API_BASE = process.env.VUE_APP_API_BASE_URL;
 
-
 export default {
   name: "UsersManagement",
   data() {
@@ -163,14 +177,15 @@ export default {
       users: [],
       currentUser: {
         id: null,
-        name: "",
+        full_name: "",
         email: "",
+        phone_number: "",
         password: "",
-        is_admin: false,
+        role: "",
       },
       isEditing: false,
       search: "",
-      showFull: {}
+      showFull: {},
     };
   },
   computed: {
@@ -189,7 +204,7 @@ export default {
   },
   methods: {
     toggleShow(id) {
-        this.showFull[id] = !this.showFull[id];
+      this.showFull[id] = !this.showFull[id];
     },
     async fetchUsers() {
       try {
@@ -206,10 +221,11 @@ export default {
       this.isEditing = false;
       this.currentUser = {
         id: null,
-        name: "",
+        full_name: "",
         email: "",
+        phone_number: "",
         password: "",
-        is_admin: false,
+        role: "",
       };
       nextTick(() => {
         new bootstrap.Modal(this.$refs.userModal).show();
@@ -217,7 +233,7 @@ export default {
     },
     editUser(user) {
       this.isEditing = true;
-      this.currentUser = { ...user, password: "" }; // Don't pre-fill password for security
+      this.currentUser = { ...user, password: "" }; 
       nextTick(() => {
         new bootstrap.Modal(this.$refs.userModal).show();
       });
@@ -227,9 +243,10 @@ export default {
         const token = localStorage.getItem("access_token");
         const headers = { Authorization: `Bearer ${token}` };
         const payload = {
-          name: this.currentUser.name,
+          full_name: this.currentUser.full_name,
           email: this.currentUser.email,
-          is_admin: this.currentUser.is_admin,
+          phone_number: this.currentUser.phone_number,
+          role: this.currentUser.role,
         };
         // Only include password if it's a new user or a password has been entered
         if (this.currentUser.password) {
@@ -237,15 +254,14 @@ export default {
         }
 
         if (this.isEditing) {
-          await axios.put(
-            `${API_BASE}/users/${this.currentUser.id}`,
-            payload,
-            { headers }
-          );
+          await axios.patch(`${API_BASE}/users/${this.currentUser.id}`, payload, {
+            headers,
+          });
+          console.log(payload)
           alert("User updated successfully!");
         } else {
           await axios.post(
-            `${API_BASE}/users`,
+            `${API_BASE}/register`,
             { ...payload, password: this.currentUser.password },
             { headers }
           );
