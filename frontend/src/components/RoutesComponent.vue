@@ -127,7 +127,7 @@ export default {
 
     // Fetch all routes
     axios
-      .get("http://127.0.0.1:8000/api/v1/routes", {
+      .get("http://127.0.0.1:8000/api/v1/routes/", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => (this.routes = res.data))
@@ -174,7 +174,7 @@ export default {
           bus_id: bus.id,
           route_id: this.selectedRoute.id,
         };
-        await axios.post("http://127.0.0.1:8000/api/v1/tickets", payload, {
+        await axios.post("http://127.0.0.1:8000/api/v1/tickets/", payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         alert("Ticket booked successfully!");

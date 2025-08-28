@@ -112,7 +112,7 @@
               <select id="busSelect" class="form-select" v-model="selectedBusId">
                 <option value="">-- Select a bus --</option>
                 <option v-for="bus in allBuses" :key="bus.id" :value="bus.id">
-                  {{ bus.plate_number }} ({{ bus.capacity }} seats)
+                  {{ bus.plate_number }} ({{ bus.seats }} seats)
                 </option>
               </select>
             </div>
@@ -213,7 +213,7 @@ export default {
           await axios.put(`http://127.0.0.1:8000/api/v1/routes/${this.currentRoute.id}`, this.currentRoute, { headers });
           alert("Route updated successfully!");
         } else {
-          await axios.post("http://127.0.0.1:8000/api/v1/routes", this.currentRoute, { headers });
+          await axios.post("http://127.0.0.1:8000/api/v1/routes/register", this.currentRoute, { headers });
           alert("Route added successfully!");
         }
         this.closeModal('routeModal');

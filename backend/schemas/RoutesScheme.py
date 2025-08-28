@@ -5,11 +5,10 @@ from datetime import datetime, timedelta, UTC
 
 
 class RegisterRoute(BaseModel):
-    id: Optional[UUID] = Field(default_factory=uuid4)
     origin: str
     destination: str
     price: int
-    created_at: Optional[datetime] = Field(default_factory=datetime.now(UTC))
+    # created_at: Optional[datetime] = Field(default_factory=datetime.now(UTC))
     
 class RouteOut(BaseModel):
     price: int
