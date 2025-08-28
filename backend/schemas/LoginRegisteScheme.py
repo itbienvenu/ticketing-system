@@ -23,3 +23,10 @@ class UpdateUser(BaseModel):
     email: Optional[EmailStr] = None
     phone_number: Optional[str] = None
     role: Optional[str] = None
+
+class UserOut(BaseModel):
+    id: UUID
+    full_name: str
+    email: EmailStr
+    phone_number: str
+    role: Optional[str] = None
