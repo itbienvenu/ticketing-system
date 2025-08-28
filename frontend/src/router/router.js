@@ -45,6 +45,16 @@ const router = createRouter({
 
 
 router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("access_token");
+  const protectedRoutes = ['/routes', '/admin', '/buses', '/routes'];
+
+  if (protectedRoutes.includes(to.path) && !token) {
+    // redirect to home if no token
+    next('/');
+  } else {
+    next(); // allow navigation
+  }
+  
   document.title = to.meta.title || 'Ticketing system'
   next()
 })
