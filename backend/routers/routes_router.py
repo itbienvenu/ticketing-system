@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from methods.functions import register_route, get_current_user
 from database.dbs import get_db
 from sqlalchemy.orm import Session
-from schemas.RoutesScheme import RegisterRoute, RouteOut, UpdateRoute
+from schemas.RoutesScheme import RegisterRoute, RouteOut, UpdateRoute, AssignBusRequest
 from uuid import UUID
-from database.models import Route
+from database.models import Route, Bus
 from typing import List
 from datetime import datetime, UTC
 
@@ -61,3 +61,33 @@ async def delete_route(route_id: str, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message":f"Route with {route_id} deleted well"}
+
+# Assign bus to routes endpoint
+
+@router.post("/assign-bus", dependencies=[Depends(get_current_user)])
+def assign_bus(payload: AssignBusRequest, db: Session = Depends(get_db)):
+    # find route
+    route = db.query(Route).filter(Route.id == str(payload.route_id)).first()
+    if not route:
+        raise HTTPException(status_code=404, detail="Route not found")
+
+    # find bus
+    bus = db.query(Bus).filter(Bus.id == str(payload.bus_id)).first()
+    if not bus:
+        raise HTTPException(status_code=404, detail="Bus not found")
+
+    # check if already assigned
+    if bus in route.buses:
+        raise HTTPException(status_code=400, detail="Bus already assigned to this route")
+
+    # assign
+    route.buses.append(bus)
+    db.commit()
+    db.refresh(route)
+
+    return {
+        "message": "Bus assigned successfully",
+        "route_id": route.id,
+        "bus_id": bus.id,
+        "assigned_buses": [b.id for b in route.buses]
+    }

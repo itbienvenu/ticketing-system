@@ -25,3 +25,7 @@ class UpdateRoute(BaseModel):
     destination: Optional[str] = None
     price: Optional[float] = None
     updated_at: datetime = datetime.now(UTC)
+
+class AssignBusRequest(BaseModel):
+    route_id: UUID
+    bus_id: UUID
