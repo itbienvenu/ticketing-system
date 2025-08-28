@@ -33,6 +33,7 @@ class Bus(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     plate_number = Column(String, unique=True, nullable=False)
+    seats = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.now(UTC))
 
     # many-to-many with routes
