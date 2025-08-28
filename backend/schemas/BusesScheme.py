@@ -7,7 +7,7 @@ from typing import List, Optional
 class BusCreate(BaseModel):
     plate_number: str = Field(..., description="Plate number of the bus")
     seats: int = Field(..., description="Seats for a certain bus")
-    route_ids: List[UUID] = Field(..., description="List of route IDs this bus will serve")
+    route_ids: List[UUID] = Field(default=None, description="List of route IDs this bus will serve")
 
 
 class BusOut(BaseModel):

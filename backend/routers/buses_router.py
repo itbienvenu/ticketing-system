@@ -14,7 +14,8 @@ router = APIRouter(prefix="/api/v1/buses", tags=["Buses"])
 @router.post("/", dependencies=[Depends(get_current_user)])
 async def create_bus(bus: BusCreate, db: Session = Depends(get_db)):
     """
-    This enpoint helps in bus creation
+    Endpoint to create a new bus.
+    Routes are optional — they can be attached later.
     """
     # Check if plate number already exists
     existing_bus = db.query(Bus).filter(Bus.plate_number == bus.plate_number).first()
@@ -25,23 +26,27 @@ async def create_bus(bus: BusCreate, db: Session = Depends(get_db)):
     new_bus = Bus(
         id=str(uuid4()),
         plate_number=bus.plate_number,
-        seats = bus.seats,
+        seats=bus.seats,
         created_at=datetime.now(UTC)
     )
 
-    # Attach routes
-    routes = db.query(Route).filter(Route.id.in_([str(rid) for rid in bus.route_ids])).all()
-    if not routes or len(routes) != len(bus.route_ids):
-        raise HTTPException(status_code=404, detail="One or more routes not found")
-    new_bus.routes = routes
+    # Attach routes only if provided
+    if bus.route_ids:
+        routes = db.query(Route).filter(Route.id.in_([str(rid) for rid in bus.route_ids])).all()
+        if not routes or len(routes) != len(bus.route_ids):
+            raise HTTPException(status_code=404, detail="One or more routes not found")
+        new_bus.routes = routes
 
     # Save
     db.add(new_bus)
     db.commit()
     db.refresh(new_bus)
 
-    return {"message": "Bus registered successfully", "bus_id": new_bus.id}
-
+    return {
+        "message": "Bus registered successfully",
+        "bus_id": new_bus.id,
+        "attached_routes": [r.id for r in new_bus.routes]  # helpful info
+    }
 
 @router.get("/by-route/{route_id}", response_model=List[BusOut], dependencies=[Depends(get_current_user)])
 async def get_buses_by_route(route_id: UUID, db: Session = Depends(get_db)):
@@ -105,3 +110,19 @@ def update_bus(bus_id: str, bus_update: UpdateBus, db: Session = Depends(get_db)
     db.commit()
     db.refresh(bus)  # refresh to get updated object
     return bus
+
+# Endpoint to delete the Bus
+
+@router.delete("/{bus_id}", dependencies=[Depends(get_db)])
+
+def delete_bus(bus_id: str, db: Session = Depends(get_db)):
+    bus = db.query(Bus).filter(Bus.id == bus_id).first()
+
+    if not bus:
+        raise HTTPException(status_code=404, detail="Bus not found")
+    db.delete(bus)
+    db.commit()
+
+    return {
+        "message":f"Deleted bus with id: {bus_id}"
+        }
