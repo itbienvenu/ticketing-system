@@ -48,3 +48,16 @@ async def update_route(route_id: UUID, updated_data: UpdateRoute,  db: Session =
     db.commit()
     db.refresh(get_route)
     return updated_data    
+
+# Endpoint to delete route
+
+@router.delete("/{route_id}", dependencies=[Depends(get_current_user)])
+
+async def delete_route(route_id: str, db: Session = Depends(get_db)):
+    route = db.query(Route).filter(Route.id == route_id).first()
+    if not route_id:
+        raise HTTPException(status_code=403, detail="Route not found")
+    db.delete(route)
+    db.commit()
+
+    return {"message":f"Route with {route_id} deleted well"}
