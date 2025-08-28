@@ -1,4 +1,3 @@
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
 <template>
   <div class="bg-primary text-white p-3" style="width: 220px; min-height: 100vh;">
     <h4 class="text-center mb-4" style="color: #fff;">Ticketing</h4>

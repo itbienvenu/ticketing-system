@@ -149,6 +149,8 @@
 import axios from 'axios';
 import QrcodeVue from 'qrcode.vue';
 import { ref, watch } from 'vue';
+const API_BASE = process.env.VUE_APP_API_BASE_URL;
+
 
 const props = defineProps({
   tickets: {
@@ -204,7 +206,7 @@ const handlePayment = async () => {
 
   try {
     const token = localStorage.getItem('access_token');
-    const response = await axios.post('http://127.0.0.1:8000/api/v1/payments/', payload, {
+    const response = await axios.post(`${API_BASE}/payments/`, payload, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -242,7 +244,7 @@ const confirmDelete = (ticket_id) => {
 const executeDelete = async () => {
   try {
     const token = localStorage.getItem('access_token');
-    const response = await axios.put(`http://127.0.0.1:8000/api/v1/tickets/${ticketToDeleteId.value}`, {}, {
+    const response = await axios.put(`${API_BASE}/tickets/${ticketToDeleteId.value}`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
 

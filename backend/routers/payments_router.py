@@ -17,8 +17,6 @@ def initiate_payment(
     ticket = db.query(Ticket).filter(Ticket.id == str(payment.ticket_id)).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
-
-
     if ticket.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="You can only pay for your own ticket")
 

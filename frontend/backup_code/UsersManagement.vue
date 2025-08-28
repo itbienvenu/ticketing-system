@@ -1,3 +1,4 @@
+const API_BASE = process.env.VUE_APP_API_BASE_URL;
 <template>
   <div class="p-4">
     <h3 class="text-purple mb-4">Users Management</h3>
@@ -153,8 +154,6 @@
 import axios from "axios";
 import { nextTick } from "vue";
 import * as bootstrap from "bootstrap";
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
-
 
 export default {
   name: "UsersManagement",
@@ -194,7 +193,7 @@ export default {
     async fetchUsers() {
       try {
         const token = localStorage.getItem("access_token");
-        const res = await axios.get(`${API_BASE}/users`, {
+        const res = await axios.get("http://127.0.0.1:8000/api/v1/users", {
           headers: { Authorization: `Bearer ${token}` },
         });
         this.users = res.data;
@@ -238,14 +237,14 @@ export default {
 
         if (this.isEditing) {
           await axios.put(
-            `${API_BASE}/users/${this.currentUser.id}`,
+            `http://127.0.0.1:8000/api/v1/users/${this.currentUser.id}`,
             payload,
             { headers }
           );
           alert("User updated successfully!");
         } else {
           await axios.post(
-            `${API_BASE}/users`,
+            "http://127.0.0.1:8000/api/v1/users",
             { ...payload, password: this.currentUser.password },
             { headers }
           );
@@ -268,7 +267,7 @@ export default {
       }
       try {
         const token = localStorage.getItem("access_token");
-        await axios.delete(`${API_BASE}/users/${userId}`, {
+        await axios.delete(`http://127.0.0.1:8000/api/v1/users/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         alert("User deleted successfully!");

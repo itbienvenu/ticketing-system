@@ -85,8 +85,6 @@
 </template>
 
 <script>
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
-
 import axios from "axios";
 import { nextTick } from "vue";
 import * as bootstrap from "bootstrap";
@@ -129,7 +127,7 @@ export default {
 
     // Fetch all routes
     axios
-      .get(`${API_BASE}/routes/`, {
+      .get("http://127.0.0.1:8000/api/v1/routes/", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => (this.routes = res.data))
@@ -144,7 +142,7 @@ export default {
       // Fetch buses for this route only
       const token = localStorage.getItem("access_token");
       try {
-        const res = await axios.get(`${API_BASE}/buses/by-route/${route_id}`, {
+        const res = await axios.get(`http://127.0.0.1:8000/api/v1/buses/by-route/${route_id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         this.buses = res.data;
@@ -168,7 +166,7 @@ export default {
     async bookTicket(bus) {
       try {
         const token = localStorage.getItem("access_token");
-        const userRes = await axios.get(`${API_BASE}/me`, {
+        const userRes = await axios.get("http://127.0.0.1:8000/api/v1/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const payload = {
@@ -176,7 +174,7 @@ export default {
           bus_id: bus.id,
           route_id: this.selectedRoute.id,
         };
-        await axios.post(`${API_BASE}/tickets/`, payload, {
+        await axios.post("http://127.0.0.1:8000/api/v1/tickets/", payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         alert("Ticket booked successfully!");
@@ -194,5 +192,5 @@ export default {
 </script>
 
 <style scoped>
-
+/* Optional styling for modal or table */
 </style>

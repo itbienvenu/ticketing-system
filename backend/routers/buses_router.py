@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from database.models import Bus, Route, bus_routes
+from database.models import Bus, Route, bus_routes, Payment
 from database.dbs import get_db  
 from schemas.BusesScheme import BusCreate, BusOut, UpdateBus
 from uuid import uuid4, UUID
@@ -113,13 +113,14 @@ def update_bus(bus_id: str, bus_update: UpdateBus, db: Session = Depends(get_db)
 
 # Endpoint to delete the Bus
 
-@router.delete("/{bus_id}", dependencies=[Depends(get_db)])
+@router.delete("/users/{bus_id}", dependencies=[Depends(get_db)])
 
 def delete_bus(bus_id: str, db: Session = Depends(get_db)):
     bus = db.query(Bus).filter(Bus.id == bus_id).first()
 
     if not bus:
         raise HTTPException(status_code=404, detail="Bus not found")
+    
     db.delete(bus)
     db.commit()
 

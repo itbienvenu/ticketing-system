@@ -1,3 +1,4 @@
+const API_BASE = process.env.VUE_APP_API_BASE_URL;
 <template>
   <div class="p-4">
     <h3 class="text-purple mb-4">Buses Management</h3>
@@ -81,7 +82,6 @@
 import axios from "axios";
 import { nextTick } from "vue";
 import * as bootstrap from "bootstrap";
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
 
 export default {
   name: "BusesManagement",
@@ -109,7 +109,7 @@ export default {
     async fetchBuses() {
       try {
         const token = localStorage.getItem("access_token");
-        const res = await axios.get(`${API_BASE}/buses/`, {
+        const res = await axios.get("http://127.0.0.1:8000/api/v1/buses/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         this.buses = res.data;
@@ -136,10 +136,10 @@ export default {
         const token = localStorage.getItem("access_token");
         const headers = { Authorization: `Bearer ${token}` };
         if (this.isEditing) {
-          await axios.patch(`${API_BASE}/buses/${this.currentBus.id}`, this.currentBus, { headers });
+          await axios.patch(`http://127.0.0.1:8000/api/v1/buses/${this.currentBus.id}`, this.currentBus, { headers });
           alert("Bus updated successfully!");
         } else {
-          await axios.post(`${API_BASE}/buses/`, this.currentBus, { headers });
+          await axios.post("http://127.0.0.1:8000/api/v1/buses/", this.currentBus, { headers });
           alert("Bus added successfully!");
         }
         this.closeModal();
@@ -155,7 +155,7 @@ export default {
       }
       try {
         const token = localStorage.getItem("access_token");
-        await axios.delete(`${API_BASE}/buses/${busId}`, {
+        await axios.delete(`http://127.0.0.1:8000/api/v1/buses/${busId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         alert("Bus deleted successfully!");

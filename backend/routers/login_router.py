@@ -30,12 +30,15 @@ async def get_users_me(current_user: User = Depends(get_current_user)):
 
 # Endpoint to delete User
 
-@router.delete("/{user_id}", dependencies=[Depends(get_current_user)])
+@router.delete("/users/{user_id}", dependencies=[Depends(get_current_user)])
 
 def delete_user(user_id, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    payments = db.query(Payment).filter(Payment.user_id == user.id).all()
+    for payment in payments:
+        db.delete(payment)
     db.delete(user)
     db.commit()
     return {"message":f"User with id: {user_id}, deleted well"}

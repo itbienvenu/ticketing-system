@@ -11,8 +11,6 @@
 </template>
 
 <script setup>
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
-
 import { ref } from 'vue'
 import axios from 'axios'
 import { defineEmits } from 'vue'
@@ -23,7 +21,7 @@ const emit = defineEmits(['ticket-added'])
 const addTicket = async () => {
   try {
     const token = localStorage.getItem('access_token')
-    await axios.post(`${API_BASE}/tickets`, 
+    await axios.post('http://127.0.0.1:8000/api/v1/tickets', 
       { title },
       { headers: { Authorization: `Bearer ${token}` } }
     )

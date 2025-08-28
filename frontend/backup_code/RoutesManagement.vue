@@ -1,3 +1,4 @@
+const API_BASE = process.env.VUE_APP_API_BASE_URL;
 <template>
   <div class="p-4">
     <h3 class="text-purple mb-4">Routes Management</h3>
@@ -131,8 +132,6 @@
 import axios from "axios";
 import { nextTick } from "vue";
 import * as bootstrap from "bootstrap";
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
-
 
 export default {
   name: "RoutesManagement",
@@ -174,7 +173,7 @@ export default {
     async fetchRoutes() {
       try {
         const token = localStorage.getItem("access_token");
-        const res = await axios.get(`${API_BASE}/routes/`, {
+        const res = await axios.get("http://127.0.0.1:8000/api/v1/routes/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         this.routes = res.data;
@@ -185,7 +184,7 @@ export default {
     async fetchAllBuses() {
       try {
         const token = localStorage.getItem("access_token");
-        const res = await axios.get(`${API_BASE}/buses/`, {
+        const res = await axios.get("http://127.0.0.1:8000/api/v1/buses/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         this.allBuses = res.data;
@@ -212,10 +211,10 @@ export default {
         const token = localStorage.getItem("access_token");
         const headers = { Authorization: `Bearer ${token}` };
         if (this.isEditing) {
-          await axios.put(`${API_BASE}/routes/${this.currentRoute.id}`, this.currentRoute, { headers });
+          await axios.put(`http://127.0.0.1:8000/api/v1/routes/${this.currentRoute.id}`, this.currentRoute, { headers });
           alert("Route updated successfully!");
         } else {
-          await axios.post(`${API_BASE}/routes/register`, this.currentRoute, { headers });
+          await axios.post("http://127.0.0.1:8000/api/v1/routes/register", this.currentRoute, { headers });
           alert("Route added successfully!");
         }
         this.closeModal('routeModal');
@@ -231,7 +230,7 @@ export default {
       }
       try {
         const token = localStorage.getItem("access_token");
-        await axios.delete(`${API_BASE}/routes/${routeId}`, {
+        await axios.delete(`http://127.0.0.1:8000/api/v1/routes/${routeId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         alert("Route deleted successfully!");
@@ -255,7 +254,7 @@ export default {
       }
       try {
         const token = localStorage.getItem("access_token");
-        await axios.post(`${API_BASE}/routes/assign-bus`, {
+        await axios.post(`http://127.0.0.1:8000/api/v1/routes/assign-bus`, {
           route_id: this.selectedRoute.id,
           bus_id: this.selectedBusId,
         }, { headers: { Authorization: `Bearer ${token}` } });

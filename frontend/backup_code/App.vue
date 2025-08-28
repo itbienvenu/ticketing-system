@@ -1,11 +1,11 @@
+const API_BASE = process.env.VUE_APP_API_BASE_URL;
 <template>
-  <router-view />
+ <router-view />
 </template>
 
 <script>
 // import LoginInput from './components/LoginInput.vue'
 
-// const API_BASE = process.env.VUE_APP_API_BASE_URL;
 // export default {
 //   name: 'App',
 //   components: {

@@ -67,6 +67,8 @@
 </template>
 
 <script setup>
+const API_BASE = process.env.VUE_APP_API_BASE_URL;
+
 import { ref } from "vue"
 import axios from "axios"
 import { useRouter } from 'vue-router'
@@ -84,7 +86,7 @@ async function login() {
   loading.value = true
 
   try {
-    const response = await axios.post('http://127.0.0.1:8000/api/v1/login/', {
+    const response = await axios.post(`${API_BASE}/login/`, {
       email: email.value,
       password: password.value
     }, {

@@ -1,3 +1,4 @@
+const API_BASE = process.env.VUE_APP_API_BASE_URL;
 <template>
   <div class="d-flex vh-100 bg-light">
     <!-- Sidebar -->
@@ -42,12 +43,11 @@ import router from '@/router/router'
 const user = ref({})
 const tickets = ref([])
 const activeTab = ref('tickets') // default view
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
 
 const fetchUser = async () => {
   try {
     const token = localStorage.getItem('access_token')
-    const response = await axios.get(`${API_BASE}/me`, {
+    const response = await axios.get('http://127.0.0.1:8000/api/v1/me', {
       headers: { Authorization: `Bearer ${token}` }
     })
     user.value = response.data
@@ -64,7 +64,7 @@ const fetchTickets = async (userId) => {
   try {
     const token = localStorage.getItem('access_token')
     const response = await axios.get(
-      `${API_BASE}/tickets/users/${userId}`,
+      `http://127.0.0.1:8000/api/v1/tickets/users/${userId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
     tickets.value = response.data

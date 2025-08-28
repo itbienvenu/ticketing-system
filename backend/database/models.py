@@ -93,7 +93,7 @@ class Payment(Base):
 
     id = Column(String, primary_key=True, index=True)
     ticket_id = Column(String, ForeignKey("tickets.id"), nullable=False)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True)
     phone_number = Column(String(20), nullable=False) 
     amount = Column(Float, nullable=False)
     provider = Column(String(50), nullable=False)

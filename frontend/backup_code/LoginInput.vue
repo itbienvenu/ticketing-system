@@ -5,23 +5,11 @@
       <!-- Title -->
       <div class="text-center mb-4">
         <h2 class="fw-bold text-primary">Ticketing System</h2>
-        <p class="text-muted small">Registration Panel</p>
+        <p class="text-muted small">Login to access your dashboard</p>
       </div>
 
       <!-- Form -->
-      <form @submit.prevent="register">
-        <!-- Names -->
-         <div class="mb-3">
-          <label for="email" class="form-label fw-semibold text-dark">Names</label>
-          <input
-            v-model="names"
-            type="text"
-            id="names"
-            class="form-control border-2 border-primary"
-            placeholder="Enter your names"
-            required
-          >
-        </div>
+      <form @submit.prevent="login">
         <!-- Email -->
         <div class="mb-3">
           <label for="email" class="form-label fw-semibold text-dark">Email</label>
@@ -31,18 +19,6 @@
             id="email"
             class="form-control border-2 border-primary"
             placeholder="Enter your email"
-            required
-          >
-        </div>
-<!-- Phone number input box -->
-         <div class="mb-3">
-          <label for="email" class="form-label fw-semibold text-dark">Phone number</label>
-          <input
-            v-model="phone"
-            type="text"
-            id="phone"
-            class="form-control border-2 border-primary"
-            placeholder="Enter your phone number"
             required
           >
         </div>
@@ -60,6 +36,13 @@
           >
         </div>
 
+        <!-- Remember -->
+        <div class="form-check mb-3">
+          <input v-model="remember" type="checkbox" class="form-check-input" id="rememberMe">
+          <label class="form-check-label text-muted" for="rememberMe">Remember me</label>
+          <br>
+          
+        </div>
 
         <!-- Submit Button -->
         <button
@@ -68,12 +51,12 @@
           style="background: linear-gradient(90deg, #0d6efd, #6f42c1); border-radius: 10px;"
           :disabled="loading"
         >
-          <span v-if="!loading">Register</span>
+          <span v-if="!loading">Login</span>
           <span v-else class="spinner-border spinner-border-sm text-white" role="status"></span>
         </button>
         <br>
         <p>
-          If you have an account login  <a href="/">here</a>.
+          If you don't have an account register <a href="/register">here</a>.
         </p>
         <!-- Error Message -->
         <p v-if="errorMessage" class="text-danger mt-2">{{ errorMessage }}</p>
@@ -84,41 +67,38 @@
 </template>
 
 <script setup>
- /* eslint-disable */
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
-
 import { ref } from "vue"
 import axios from "axios"
 import { useRouter } from 'vue-router'
 
 const email = ref("")
-const names = ref("")
 const password = ref("")
-const phone = ref("")
+const remember = ref(false)
 const errorMessage = ref("")
 const loading = ref(false)
 
 const router = useRouter()
 
-async function register() {
+async function login() {
   errorMessage.value = ""
   loading.value = true
 
   try {
-    const response = await axios.post(`${API_BASE}/register/`, {
-      full_name: names.value,
-      phone_number: phone.value,
+    const response = await axios.post('http://127.0.0.1:8000/api/v1/login/', {
       email: email.value,
       password: password.value
     }, {
       headers: { 'Content-Type': 'application/json' }
     })
     
+    localStorage.setItem("access_token", response.data.access_token)
+    localStorage.setItem("token_type", response.data.token_type)
+
     // Redirect to Home
-    router.push('/')
+    router.push('/home')
 
   } catch (error) {
-    console.error("Login error:", error)
+    // console.error("Login error:", error)
     if (error.response && error.response.data) {
       // FastAPI returns 'detail' on errors
       errorMessage.value = error.response.data.detail || "An error occurred"

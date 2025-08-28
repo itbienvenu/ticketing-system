@@ -20,7 +20,7 @@ setInterval(async () => {
   if (!token || isTokenValid(token)) return;
 
   try {
-    await axios.get(`${API_BASE}/validate-token`, {
+    await axios.get("http://127.0.0.1:8000/api/v1/validate-token", {
       headers: { Authorization: `Bearer ${token}` },
     });
   } catch {

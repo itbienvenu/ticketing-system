@@ -85,8 +85,6 @@
 
 <script setup>
  /* eslint-disable */
-const API_BASE = process.env.VUE_APP_API_BASE_URL;
-
 import { ref } from "vue"
 import axios from "axios"
 import { useRouter } from 'vue-router'
@@ -105,7 +103,7 @@ async function register() {
   loading.value = true
 
   try {
-    const response = await axios.post(`${API_BASE}/register/`, {
+    const response = await axios.post('http://127.0.0.1:8000/api/v1/register/', {
       full_name: names.value,
       phone_number: phone.value,
       email: email.value,
