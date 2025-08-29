@@ -14,7 +14,7 @@ async def login(user: LoginUser, db: Session = Depends(get_db)):
     return login_user(db, user)
 
 
-@router.post("/register", response_model=RegisterUser)
+@router.post("/register", response_model=UserOut)
 async def register(user: RegisterUser, db: Session = Depends(get_db)):
     return create_user(db, user)
 
@@ -24,8 +24,8 @@ async def get_users_me(current_user: User = Depends(get_current_user)):
         "id":str(current_user.id),
         "full_name": current_user.full_name,
         "email":current_user.email,
-        "phone_number":current_user.phone_number,
-        "role":current_user.role
+        "phone_number":current_user.phone_number
+        # "role":current_user.role
     }
 
 # Endpoint to delete User

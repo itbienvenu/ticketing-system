@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from database.models import Bus, Route, bus_routes, Payment
+from database.models import Bus, Route, bus_routes, Payment, User
 from database.dbs import get_db  
 from schemas.BusesScheme import BusCreate, BusOut, UpdateBus
 from uuid import uuid4, UUID
@@ -10,6 +10,15 @@ from datetime import datetime, UTC
 router = APIRouter(prefix="/api/v1/buses", tags=["Buses"])
 
 # Creating the buss
+
+def require_roles(allowed_roles: list[str]):
+    def decorator(user: User = Depends(get_current_user)):
+        user_roles = [ur.role.name for ur in user.roles]
+        if not any(role in allowed_roles for role in user_roles):
+            raise HTTPException(status_code=403, detail="Forbidden")
+        return user
+    return decorator
+
 
 @router.post("/", dependencies=[Depends(get_current_user)])
 async def create_bus(bus: BusCreate, db: Session = Depends(get_db)):

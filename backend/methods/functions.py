@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from passlib.hash import bcrypt
 from database.dbs import Base, engine, get_db
 from database.models import User, Route
-from schemas.LoginRegisteScheme import RegisterUser, LoginUser
+from schemas.LoginRegisteScheme import RegisterUser, LoginUser, UserOut
 from schemas.RoutesScheme import RegisterRoute, UpdateRoute, RouteOut
 from jose import jwt, JWTError
 import os
@@ -18,6 +18,16 @@ ALGORITHM = os.environ.get("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES"))
 # oauth2_scheme  = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 bearer_scheme = HTTPBearer()
+
+
+def has_permission(user, permission_name: str):
+    return any(
+        permission_name == perm.name
+        for role in user.roles
+        for perm in role.permissions
+    )
+
+
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
@@ -47,10 +57,12 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_
     return user
 
 
+
 def create_user(db: Session, user: RegisterUser):
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
+        print(existing_user.email)
         raise HTTPException(status_code=400, detail="Email already registered")
     
     hashed_password = bcrypt.hash(user.password)
@@ -59,7 +71,7 @@ def create_user(db: Session, user: RegisterUser):
         full_name=user.full_name,
         email=user.email,
         phone_number=user.phone_number,
-        password=hashed_password
+        password_hash=hashed_password
     )
     db.add(db_user)
     db.commit()
@@ -82,12 +94,13 @@ def login_user(db: Session, user: LoginUser):
     if not check_user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    if not verify_password(user.password, check_user.password):
+    if not verify_password(user.password_hash, check_user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
     token = create_access_token(
         data={
             "sub":str(check_user.id),
-            "role": str(check_user.role)
+            # "role": str(check_user.role)
             }, 
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {

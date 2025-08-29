@@ -6,19 +6,59 @@ import uuid
 from datetime import datetime, UTC
 import enum
 
+# Association table: roles <-> permissions (many-to-many)
+role_permissions = Table(
+    "role_permissions",
+    Base.metadata,
+    Column("role_id", String, ForeignKey("roles.id"), primary_key=True),
+    Column("permission_id", String, ForeignKey("permissions.id"), primary_key=True),
+)
+
+# Association table: users <-> roles (if multi-role support)
+user_roles = Table(
+    "user_roles",
+    Base.metadata,
+    Column("user_id", String, ForeignKey("users.id"), primary_key=True),
+    Column("role_id", String, ForeignKey("roles.id"), primary_key=True),
+)
+
+
 class User(Base):
     __tablename__ = "users"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    full_name = Column(String, nullable=False)
-    phone_number = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False)
-    role = Column(String, nullable=False, default="user")
-    created_at = Column(DateTime, default=datetime.now(UTC))
-    updated_at = Column(DateTime, default=datetime.now(UTC))
 
-    tickets = relationship("Ticket", back_populates="user")
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    full_name = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=True)
+    phone_number = Column(String, nullable=True)
+    password_hash = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC))
+
+
+    roles = relationship("Role", secondary=user_roles, back_populates="users")
+    tickets = relationship("Ticket", back_populates="user")      # <--- add this
     payments = relationship("Payment", back_populates="user")
+
+
+class Role(Base):
+    __tablename__ = "roles"
+
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String, unique=True, nullable=False)
+
+    users = relationship("User", secondary=user_roles, back_populates="roles")
+    permissions = relationship("Permission", secondary=role_permissions, back_populates="roles")
+
+
+class Permission(Base):
+    __tablename__ = "permissions"
+
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String, unique=True, nullable=False)
+
+    roles = relationship("Role", secondary=role_permissions, back_populates="permissions")
+
+
+# Bus tables
 
 bus_routes = Table(
     "bus_routes",

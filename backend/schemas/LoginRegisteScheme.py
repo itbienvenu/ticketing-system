@@ -12,10 +12,12 @@ class RegisterUser(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     # updated_at: datetime =Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
+
 class LoginUser(BaseModel):
     email: Optional[EmailStr] = None
     phone_number: Optional[str] = None
-    password: str
+    password_hash: str
 
 
 class UpdateUser(BaseModel):
