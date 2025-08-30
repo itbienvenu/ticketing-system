@@ -1,14 +1,18 @@
 """hy"""
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import login_router, routes_router, tickets_router, buses_router, auth_router, payments_router
 from database.dbs import engine
 from database.models import Base
+import uvicorn
 
 app = FastAPI()
 
-
+# Create database tables
 Base.metadata.create_all(bind=engine)
+
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  
@@ -17,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],  
 )
 
-
+# Include routers
 app.include_router(auth_router.router)
 app.include_router(login_router.router)
 app.include_router(routes_router.router)
@@ -25,7 +29,14 @@ app.include_router(tickets_router.router)
 app.include_router(buses_router.router)
 app.include_router(payments_router.router)
 
+# Home route
 @app.get("/api/v1/")
 def home():
     """The home route"""
-    return {"message":"Home Page"}
+    return {"message": "Home Page"}
+
+# Entry point for Render
+if __name__ == "__main__":
+    # Render provides the port via the $PORT environment variable
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="127.0.0.1", port=port, log_level="info")

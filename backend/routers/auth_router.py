@@ -16,6 +16,8 @@ async def validate_token(current_user = Depends(get_current_user)):
 @router.post("/create_role", dependencies=[Depends(check_permission("create_role"))])
 def create_role(role_data: RoleCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     # Check if role with same name exists
+    """Admins are only to  access this role"""
+
     existing = db.query(Role).filter(Role.name == role_data.name).first()
     if existing:
         raise HTTPException(
@@ -33,8 +35,11 @@ def create_role(role_data: RoleCreate, db: Session = Depends(get_db), current_us
     return {"message": "Role created successfully", "role": {"id": new_role.id, "name": new_role.name}}
 
 @router.post("/create_permission", dependencies=[Depends(check_permission("create_permission"))])
+
 def create_permission(permission_data: PermissionCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     # Check if permission with the same name exists
+    """Admins are only to  access this role"""
+
     existing = db.query(Permission).filter(Permission.name == permission_data.name).first()
     if existing:
         raise HTTPException(
@@ -54,6 +59,7 @@ def create_permission(permission_data: PermissionCreate, db: Session = Depends(g
 @router.post("/assign_permissions", dependencies=[Depends(check_permission("assign_permission"))])
 def assign_permissions_to_role(data: RolePermissionAssign, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     # Fetch role
+    """Admins are only to  access this role"""
     role = db.query(Role).filter(Role.id == data.role_id).first()
     if not role:
         raise HTTPException(
@@ -86,6 +92,7 @@ def assign_permissions_to_role(data: RolePermissionAssign, db: Session = Depends
 
 @router.get("/get_permissions", response_model=List[PermissionOut], dependencies=[Depends(check_permission("get_permission"))])
 def get_permissions(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    """Any one can access this enpoint to see his permission, but mostly for admins class"""
     return db.query(Permission).all()
 
 # Role managment

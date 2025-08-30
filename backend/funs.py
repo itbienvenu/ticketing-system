@@ -5,6 +5,13 @@ import uuid
 conn = sqlite3.connect("tickets.db")
 cursor = conn.cursor()
 
+# wsgi.py
+from fastapi.middleware.wsgi import WSGIMiddleware
+from main import app as fastapi_app
+
+application = WSGIMiddleware(fastapi_app)
+
+
 # Create the permissions table if it doesn't exist
 # List of permissions to create
 permissions = [
