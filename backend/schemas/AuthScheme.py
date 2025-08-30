@@ -16,8 +16,8 @@ class PermissionCreate(BaseModel):
     name: str
 
 class RolePermissionAssign(BaseModel):
-    role_id: int
-    permission_ids: List[int]     
+    role_id: str
+    permission_ids: List[str]     
 
 class PermissionOut(BaseModel):
     id: str

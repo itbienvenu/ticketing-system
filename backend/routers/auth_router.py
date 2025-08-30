@@ -84,7 +84,7 @@ def assign_permissions_to_role(data: RolePermissionAssign, db: Session = Depends
     }
 
 
-@router.post("/get_permissions", response_model=List[PermissionOut], dependencies=[Depends(check_permission("get_permission"))])
+@router.get("/get_permissions", response_model=List[PermissionOut], dependencies=[Depends(check_permission("get_permission"))])
 def get_permissions(db: Session = Depends(get_db), user = Depends(get_current_user)):
     return db.query(Permission).all()
 

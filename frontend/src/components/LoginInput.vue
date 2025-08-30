@@ -88,7 +88,7 @@ async function login() {
   try {
     const response = await axios.post(`${API_BASE}/login/`, {
       email: email.value,
-      password: password.value
+      password_hash: password.value
     }, {
       headers: { 'Content-Type': 'application/json' }
     })

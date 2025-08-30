@@ -21,7 +21,8 @@ permissions = [
 #     )
 
 # cursor.execute("INSERT INTO roles (id, name) VALUES (?,?)", (str(uuid.uuid4()), "admin"))
-cursor.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?,?)", ("bf26aad1-17ac-4070-bdb2-8ee2f563a01d", "91c05ac9-128d-4b34-ae87-53195993779f"))
+cursor.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?,?)", ("bf26aad1-17ac-4070-bdb2-8ee2f563a01d", "e9d9702a-864e-4a5c-a3c8-d12cea6adb43"))
+# cursor.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?,?)", ("bf26aad1-17ac-4070-bdb2-8ee2f563a01d", "91c05ac9-128d-4b34-ae87-53195993779f"))
 
 # Commit changes and close the connection
 conn.commit()

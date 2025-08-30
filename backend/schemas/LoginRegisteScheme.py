@@ -24,11 +24,11 @@ class UpdateUser(BaseModel):
     full_name: Optional[str] = None
     email: Optional[EmailStr] = None
     phone_number: Optional[str] = None
-    role: Optional[str] = None
+    role: Optional[str] = None  # role name
 
 class UserOut(BaseModel):
     id: UUID
     full_name: str
     email: EmailStr
-    phone_number: str
+    phone_number: Optional[str] = None
     role: Optional[str] = None
