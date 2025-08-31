@@ -73,7 +73,8 @@ def create_user(db: Session, user: RegisterUser):
         full_name=user.full_name,
         email=user.email,
         phone_number=user.phone_number,
-        password_hash=hashed_password
+        password_hash=hashed_password,
+        
     )
     
     # Assign the existing 'user' role

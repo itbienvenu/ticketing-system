@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from schemas.AuthScheme import RoleCreate, PermissionCreate, RolePermissionAssign, PermissionOut, MyPermissionsOut, RoleOut
 from typing import List
 
-router = APIRouter(prefix="/api/v1", tags=['Authorization endpoints'])
+router = APIRouter(prefix="/api/v1/auth", tags=['Authorization endpoints'])
 
 @router.get("/validate-token")
 async def validate_token(current_user = Depends(get_current_user)):
