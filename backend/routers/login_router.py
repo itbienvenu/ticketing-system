@@ -35,7 +35,7 @@ async def get_users_me(current_user: User = Depends(get_current_user)):
 
 # Endpoint to delete User
 
-@router.delete("/users/{user_id}", dependencies=[Depends(get_current_user)])
+@router.delete("/users/{user_id}", dependencies=[Depends(get_current_user), Depends(check_permission("delete_user"))])
 def delete_user(user_id, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -49,7 +49,7 @@ def delete_user(user_id, db: Session = Depends(get_db)):
 
 # Endpoint to Edit User
 
-@router.patch("/users/{user_id}", response_model=UserOut)
+@router.patch("/users/{user_id}", response_model=UserOut, dependencies=[Depends(check_permission("update_user"))])
 async def update_user(
     user_id: str,
     db: Session = Depends(get_db),

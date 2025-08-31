@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
+
 from methods.functions import register_route, get_current_user
+from methods.permissions import check_permission
+
 from database.dbs import get_db
 from sqlalchemy.orm import Session
 from schemas.RoutesScheme import RegisterRoute, RouteOut, UpdateRoute, AssignBusRequest
@@ -11,8 +14,8 @@ from datetime import datetime, UTC
 
 router = APIRouter(prefix="/api/v1/routes", tags=['Routes End Points'])
 
-@router.post("/register", response_model=RegisterRoute)
-async def register_routes(route: RegisterRoute, db: Session = Depends(get_db) ):
+@router.post("/register", dependencies=[Depends(get_current_user), Depends(check_permission("create_route"))])
+async def register_routes(route: RegisterRoute, db: Session = Depends(get_db) ) -> RegisterRoute:
     return register_route(db, route)
 
 @router.get("/{route_id}", response_model=RouteOut, dependencies=[Depends(get_current_user)])
@@ -35,7 +38,7 @@ async def get_all_routes(db: Session = Depends(get_db)):
         routes_list.append(r)
     return routes_list    
 
-@router.put("/{route_id}", response_model=UpdateRoute, dependencies=[Depends(get_current_user)])
+@router.put("/{route_id}", response_model=UpdateRoute, dependencies=[Depends(get_current_user), Depends(check_permission("update_route"))])
 async def update_route(route_id: UUID, updated_data: UpdateRoute,  db: Session = Depends(get_db)):
     get_route = db.query(Route).filter(Route.id == str(route_id)).first()
     if not get_route:
@@ -51,8 +54,7 @@ async def update_route(route_id: UUID, updated_data: UpdateRoute,  db: Session =
 
 # Endpoint to delete route
 
-@router.delete("/{route_id}", dependencies=[Depends(get_current_user)])
-
+@router.delete("/{route_id}", dependencies=[Depends(get_current_user), Depends(check_permission("delete_route"))])
 async def delete_route(route_id: str, db: Session = Depends(get_db)):
     route = db.query(Route).filter(Route.id == route_id).first()
     if not route_id:
@@ -64,7 +66,7 @@ async def delete_route(route_id: str, db: Session = Depends(get_db)):
 
 # Assign bus to routes endpoint
 
-@router.post("/assign-bus", dependencies=[Depends(get_current_user)])
+@router.post("/assign-bus", dependencies=[Depends(get_current_user), Depends(check_permission("assign_bus_route"))])
 def assign_bus(payload: AssignBusRequest, db: Session = Depends(get_db)):
     # find route
     route = db.query(Route).filter(Route.id == str(payload.route_id)).first()

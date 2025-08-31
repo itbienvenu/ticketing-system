@@ -5,8 +5,9 @@ from database.dbs import get_db
 from sqlalchemy.orm import aliased, joinedload
 from methods.permissions import check_permission
 from sqlalchemy.orm import Session
-from schemas.AuthScheme import RoleCreate, PermissionCreate, RolePermissionAssign, PermissionOut, MyPermissionsOut
+from schemas.AuthScheme import RoleCreate, PermissionCreate, RolePermissionAssign, PermissionOut, MyPermissionsOut, RoleOut
 from typing import List
+
 router = APIRouter(prefix="/api/v1", tags=['Authorization endpoints'])
 
 @router.get("/validate-token")
@@ -36,7 +37,6 @@ def create_role(role_data: RoleCreate, db: Session = Depends(get_db), current_us
     return {"message": "Role created successfully", "role": {"id": new_role.id, "name": new_role.name}}
 
 @router.post("/create_permission", dependencies=[Depends(check_permission("create_permission"))])
-
 def create_permission(permission_data: PermissionCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     # Check if permission with the same name exists
     """Admins are only to  access this role"""
@@ -85,9 +85,10 @@ def my_permissions(
 
 # Getting all roles
 
-@router.get("/all_roles", dependencies=[Depends(check_permission("list_all_roles"))])
-def get_all_roles():
-    pass
+@router.get("/all_roles", response_model=List[RoleOut], dependencies=[Depends(check_permission("list_all_roles"))])
+def get_all_roles(db: Session = Depends(get_db)):
+    return db.query(Role).all()
+    
 
 # Assigning the 
 @router.post("/assign_permissions", dependencies=[Depends(check_permission("assign_permission"))])
@@ -133,3 +134,23 @@ def assign_permissions_to_role(
             "permissions": [{"id": p.id, "name": p.name} for p in role.permissions]
         }
     }
+
+# Deleting the role
+@router.delete("/roles/{role_id}", dependencies=[Depends(check_permission("delete_role"))])
+def delete_role(
+    role_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    # Find the role to delete
+    role = db.query(Role).filter(Role.id == role_id).first()
+    
+    # Check if the role exists
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    # Delete the role
+    db.delete(role)
+    db.commit()
+
+    return {"message": f"Role '{role.name}' with ID '{role_id}' deleted successfully"}
