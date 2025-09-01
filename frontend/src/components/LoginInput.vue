@@ -86,7 +86,7 @@ async function login() {
   loading.value = true
 
   try {
-    const response = await axios.post(`${API_BASE}/login/`, {
+    const response = await axios.post(`${API_BASE}/login`, {
       email: email.value,
       password_hash: password.value
     }, {
