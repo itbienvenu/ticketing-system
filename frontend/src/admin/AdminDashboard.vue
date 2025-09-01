@@ -26,6 +26,11 @@
           <BusesManagement />
         </div>
 
+        
+        <div v-else-if="activeTab === 'auth'">
+          <AuthComponent />
+        </div>
+
         <div v-else>
           <p class="text-muted">Please select a section from the sidebar.</p>
         </div>
@@ -45,6 +50,7 @@ import RoutesManagement from './RoutesManagement.vue';
 import TicketsManagement from './TicketsManagement.vue';
 import UsersManagement from './UsersManagement.vue';
 import BusesManagement from './BusesManagement.vue';
+import AuthComponent from './AuthComponent.vue';
 
 const API_BASE = process.env.VUE_APP_API_BASE_URL;
 

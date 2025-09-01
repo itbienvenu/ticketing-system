@@ -31,3 +31,4 @@ class UserOut(BaseModel):
     full_name: str
     email: EmailStr
     phone_number: Optional[str] = None
+    role: Optional[str] = None

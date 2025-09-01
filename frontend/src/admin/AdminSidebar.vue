@@ -28,6 +28,11 @@ const API_BASE = process.env.VUE_APP_API_BASE_URL;
           <i class="fas fa-bus me-2"></i> Buses
         </a>
       </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link text-white" @click.prevent="$emit('navigate', 'auth')">
+          <i class="fas fa-bus me-2"></i> Auth
+        </a>
+      </li>
     </ul>
   </div>
 </template>

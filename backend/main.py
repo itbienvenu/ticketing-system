@@ -7,7 +7,11 @@ from database.dbs import engine
 from database.models import Base
 import uvicorn
 
-app = FastAPI()
+app = FastAPI(
+    docs_url="/documentation",
+    redoc_url=None,
+    # openapi_url=None
+)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
