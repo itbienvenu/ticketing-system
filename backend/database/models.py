@@ -73,10 +73,11 @@ class Bus(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     plate_number = Column(String, unique=True, nullable=False)
-    seats = Column(Integer, nullable=False, default=0)
+    capacity = Column(Integer, nullable=False)   # total seats
+    available_seats = Column(Integer, nullable=False)  # changes when booking
+
     created_at = Column(DateTime, default=datetime.now(UTC))
 
-    # many-to-many with routes
     routes = relationship(
         "Route",
         secondary=bus_routes,

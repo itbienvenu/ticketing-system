@@ -35,7 +35,7 @@ async def create_bus(bus: BusCreate, db: Session = Depends(get_db)):
     new_bus = Bus(
         id=str(uuid4()),
         plate_number=bus.plate_number,
-        seats=bus.seats,
+        capacity=bus.capacity,
         created_at=datetime.now(UTC)
     )
 
@@ -70,7 +70,8 @@ async def get_buses_by_route(route_id: UUID, db: Session = Depends(get_db)):
         result.append(BusOut(
             id=bus.id,
             plate_number=bus.plate_number,
-            seats=bus.seats,
+            capacity=bus.capacity,
+            available_seats=bus.available_seats,
             created_at=bus.created_at,
             route_ids=[r.id for r in bus.routes]
         ))
@@ -90,7 +91,8 @@ async def get_all_buses(db: Session = Depends(get_db)):
         bus_dict = {
             "id": bus.id,
             "plate_number": bus.plate_number,
-            "seats": bus.seats,
+            "capacity": bus.capacity,
+            "available_seats":bus.available_seats,
             "created_at": bus.created_at,
             "route_ids": route_ids,
         }
@@ -111,8 +113,8 @@ def update_bus(bus_id: str, bus_update: UpdateBus, db: Session = Depends(get_db)
     # Update only fields that are provided
     if bus_update.plate_number is not None:
         bus.plate_number = bus_update.plate_number
-    if bus_update.seats is not None:
-        bus.seats = bus_update.seats
+    if bus_update.capacity is not None:
+        bus.capacity = bus_update.capacity
     if bus_update.route_ids is not None:
         bus.route_ids = bus_update.route_ids
 
