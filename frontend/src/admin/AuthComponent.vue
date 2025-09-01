@@ -340,7 +340,7 @@ const paginatedMyPermissions = computed(() => {
 const fetchAllRoles = async () => {
   try {
     const token = getToken();
-    const response = await axios.get(`${API_BASE}/auth/all_roles`, {
+    const response = await axios.get(`${API_BASE}/roles/all_roles`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     allRoles.value = response.data;
@@ -352,7 +352,7 @@ const fetchAllRoles = async () => {
 const fetchAllPermissions = async () => {
   try {
     const token = getToken();
-    const response = await axios.get(`${API_BASE}/auth/get_permissions`, {
+    const response = await axios.get(`${API_BASE}/perm/get_permissions`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     allPermissions.value = response.data;
@@ -364,7 +364,7 @@ const fetchAllPermissions = async () => {
 const fetchMyPermissions = async () => {
   try {
     const token = getToken();
-    const response = await axios.get(`${API_BASE}/auth/my_permissions`, {
+    const response = await axios.get(`${API_BASE}/perm/my_permissions`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     myPermissions.value = response.data.permissions;
@@ -377,7 +377,7 @@ const createRole = async () => {
   try {
     const token = getToken();
     await axios.post(
-      `${API_BASE}/auth/create_role`,
+      `${API_BASE}/roles/create_role`,
       { name: newRoleName.value },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -395,7 +395,7 @@ const createPermission = async () => {
   try {
     const token = getToken();
     await axios.post(
-      `${API_BASE}/auth/create_permission`,
+      `${API_BASE}/perm/create_permission`,
       { name: newPermissionName.value },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -413,7 +413,7 @@ const assignPermissionsToRole = async () => {
   try {
     const token = getToken();
     await axios.post(
-      `${API_BASE}/auth/assign_permissions`,
+      `${API_BASE}/perm/assign_permissions`,
       { role_id: selectedRoleId.value, permission_id: selectedPermissionId.value },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -432,7 +432,7 @@ const deleteRole = async (roleId) => {
     try {
       const token = getToken();
       await axios.delete(
-        `${API_BASE}/auth/delete_role/${roleId}`,
+        `${API_BASE}/roles/delete_role/${roleId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert('Role deleted successfully!');
@@ -449,7 +449,7 @@ const deletePermission = async (permissionId) => {
     try {
       const token = getToken();
       await axios.delete(
-        `${API_BASE}/auth/delete_permission/${permissionId}`,
+        `${API_BASE}/perm/delete_permission/${permissionId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert('Permission deleted successfully!');

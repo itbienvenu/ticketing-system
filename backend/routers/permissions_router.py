@@ -8,33 +8,12 @@ from sqlalchemy.orm import Session
 from schemas.AuthScheme import RoleCreate, PermissionCreate, RolePermissionAssign, PermissionOut, MyPermissionsOut, RoleOut
 from typing import List
 
-router = APIRouter(prefix="/api/v1/auth", tags=['Authorization endpoints'])
+router = APIRouter(prefix="/api/v1/perm", tags=['Permission control endpoints'])
 
 @router.get("/validate-token")
 async def validate_token(current_user = Depends(get_current_user)):
     return {"status": "valid", "user_id": current_user.id}
 
-# Endpoint to create roles
-@router.post("/create_role", dependencies=[Depends(check_permission("create_role"))])
-def create_role(role_data: RoleCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    # Check if role with same name exists
-    """Admins are only to  access this role"""
-
-    existing = db.query(Role).filter(Role.name == role_data.name).first()
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Role with this name already exists"
-        )
-    
-    # Create Role
-    new_role = Role(name=role_data.name)
-
-    db.add(new_role)
-    db.commit()
-    db.refresh(new_role)
-    
-    return {"message": "Role created successfully", "role": {"id": new_role.id, "name": new_role.name}}
 
 @router.post("/create_permission", dependencies=[Depends(check_permission("create_permission"))])
 def create_permission(permission_data: PermissionCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
@@ -83,12 +62,7 @@ def my_permissions(
         "permissions": [{"id": p.id, "name": p.name} for p in permissions]
     }
 
-# Getting all roles
 
-@router.get("/all_roles", response_model=List[RoleOut], dependencies=[Depends(check_permission("list_all_roles"))])
-def get_all_roles(db: Session = Depends(get_db)):
-    return db.query(Role).all()
-    
 
 # Assigning the 
 @router.post("/assign_permissions", dependencies=[Depends(check_permission("assign_permission"))])
@@ -135,22 +109,25 @@ def assign_permissions_to_role(
         }
     }
 
-# Deleting the role
-@router.delete("/roles/{role_id}", dependencies=[Depends(check_permission("delete_role"))])
+
+
+# Deleting the Permission
+@router.delete("/delete_permission/{permission_id}", dependencies=[Depends(check_permission("delete_permission"))])
 def delete_role(
-    role_id: str,
+    permission_id: str,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
     # Find the role to delete
-    role = db.query(Role).filter(Role.id == role_id).first()
+    permission = db.query(Permission).filter(Permission.id == permission_id).first()
     
     # Check if the role exists
-    if not role:
-        raise HTTPException(status_code=404, detail="Role not found")
+    if not permission:
+        raise HTTPException(status_code=404, detail="Permission not found")
 
-    # Delete the role
-    db.delete(role)
+    # Delete the Permissionrole
+    db.delete(permission)
     db.commit()
 
-    return {"message": f"Role '{role.name}' with ID '{role_id}' deleted successfully"}
+    return {"message": f"Role '{permission.name}' with ID '{permission_id}' deleted successfully"}
+
