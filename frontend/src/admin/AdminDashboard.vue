@@ -63,9 +63,12 @@ const fetchAdminUser = async () => {
     const response = await axios.get(`${API_BASE}/me`, {
       headers: { Authorization: `Bearer ${token}` }
     });
+    console.log(response.data)
     if (response.data.role == 'admin' || response.data.value == "manager") {
       adminUser.value = response.data;
-    } else {
+    } else if (response.data.role == "manager"){
+      console.log("Manager", response.data)
+    }else {
       console.error('Unauthorized access. User is not an admin.');
     }
   } catch (err) {

@@ -51,13 +51,15 @@ const fetchUser = async () => {
       headers: { Authorization: `Bearer ${token}` }
     })
     user.value = response.data
+    console.log(response.data)
     if (response.data.role == "admin") {
       router.push('/admin')
     } else if (response.data.role == "manager"){
-
+      console.log(response.data)
       router.push("/admin")
     }
     fetchTickets(user.value.id)
+    console.log(response.data)
   } catch (err) {
     console.error('Failed to fetch user', err)
   }

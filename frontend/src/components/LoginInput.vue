@@ -54,6 +54,14 @@
           <span v-if="!loading">Login</span>
           <span v-else class="spinner-border spinner-border-sm text-white" role="status"></span>
         </button>
+        <p>Continue with</p>
+        <button
+        class="btn w-100 fw-bold text-white d-flex justify-content-center align-items-center"
+        type="submit"
+        style="background: linear-gradient(90deg, #0d6efd, #f00); border-radius: 10px;"
+        >
+         <span>MT GLORY </span>
+        </button>
         <br>
         <p>
           If you don't have an account register <a href="/register">here</a>.
