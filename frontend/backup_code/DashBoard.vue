@@ -53,6 +53,9 @@ const fetchUser = async () => {
     user.value = response.data
     if (response.data.role == "admin") {
       router.push('/admin')
+    } else if (response.data.role == "manager"){
+
+      router.push("/admin")
     }
     fetchTickets(user.value.id)
   } catch (err) {

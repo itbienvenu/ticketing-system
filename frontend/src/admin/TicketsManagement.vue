@@ -75,10 +75,11 @@ export default {
       if (!this.search) return this.tickets;
       const searchTerm = this.search.toLowerCase();
       return this.tickets.filter(ticket =>
-        ticket.user.name.toLowerCase().includes(searchTerm) ||
+        ticket.full_name.toLowerCase().includes(searchTerm) ||
         ticket.route.origin.toLowerCase().includes(searchTerm) ||
         ticket.route.destination.toLowerCase().includes(searchTerm) ||
-        ticket.status.toLowerCase().includes(searchTerm)
+        ticket.status.toLowerCase().includes(searchTerm) ||
+        ticket.bus.toLowerCase().includes(searchTerm)
       );
     },
   },
@@ -117,7 +118,7 @@ export default {
       if (confirm('Are you sure you want to delete this ticket? This action is permanent.')) {
         try {
           const token = localStorage.getItem('access_token');
-          await axios.delete(`http://127.0.0.1:8000/api/v1/tickets/${ticketId}`, {
+          await axios.delete(`http://127.0.0.1:8000/api/v1/tickets/admin_delete/${ticketId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           alert('Ticket deleted successfully!');

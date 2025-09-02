@@ -22,7 +22,7 @@ class RouteInfo(BaseModel):
 
 class TicketResponse(BaseModel):
     id: UUID
-    user_id: UUID
+    user_id: Optional[str] = None
     full_name:Optional[str] = None
     qr_code: str
     status: str

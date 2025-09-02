@@ -118,7 +118,7 @@ def get_all_tickets(db: Session = Depends(get_db)):
     for ticket in tickets:
         ticket_data = {
             "id": ticket.id,
-            "user_id": ticket.user_id,
+            "user_id": str(ticket.user_id),
             "full_name": ticket.user.full_name if ticket.user else None,
             "qr_code": ticket.qr_code,
             "status": ticket.status,
@@ -164,7 +164,7 @@ async def delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(ticket)
 
-    return {"message": "Ticket marked as deleted", "ticket_id": str(ticket.id), "status": ticket.status}
+    return {"message": "Ticket  deleted", "ticket_id": str(ticket.id), "status": ticket.status}
 
 @router.get("/users/{user_id}", response_model=list[TicketResponse], dependencies=[Depends(get_current_user)])
 async def list_user_tickets(user_id: str, db: Session = Depends(get_db)):
@@ -219,3 +219,16 @@ def update_ticket_status(ticket_id: str, status: str, db: Session = Depends(get_
         status=ticket.status,
         created_at=ticket.created_at
     )
+
+@router.delete("/admin_delete/{ticket_id}", dependencies=[Depends(get_current_user)])
+async def admin_delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
+    # find ticket
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    db.delete(ticket)
+    db.commit()
+
+
+    return {"message": "Ticket deleted by admin"}
