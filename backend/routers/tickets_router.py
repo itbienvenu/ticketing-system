@@ -61,6 +61,20 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
     if not route:
         raise HTTPException(status_code=404, detail="Route not found")
     
+    # Checking the if ticket is not assigned before
+    
+    existing_ticket = db.query(Ticket).filter(
+        Ticket.user_id == str(ticket_req.user_id),
+        Ticket.route_id == str(ticket_req.route_id),
+        Ticket.status == "booked",  # or 'active' depending on your logic
+        Ticket.mode == 'active'
+    ).first()
+
+    if existing_ticket:
+        raise HTTPException(
+            status_code=400,
+            detail="You have already booked a ticket for this route"
+        )
 
     
     payload = {
