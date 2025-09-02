@@ -82,12 +82,15 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
         created_at=datetime.now(UTC),
         mode='active'
     )
+    
+    if bus.available_seats >= bus.capacity:
+        raise HTTPException(status_code=404, detail="Bus is overloaded")
+    
     bus.available_seats += 1
     db.add(new_ticket)
     db.commit()
     db.refresh(new_ticket)
-    if bus.capacity - bus.available_seats == 0:
-        raise HTTPException(status_code=404, detail="Bus is over loaded")
+
     return TicketResponse(
         id=new_ticket.id,
         user_id=new_ticket.user_id,

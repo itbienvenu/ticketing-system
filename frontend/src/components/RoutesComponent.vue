@@ -22,11 +22,14 @@
       </thead>
       <tbody>
         <tr v-for="route in paginatedRoutes" :key="route.id">
-          <td style="text-align: left;">{{ route.origin }}</td>
-          <td style="text-align: left;">{{ route.destination }}</td>
+          <td style="text-align: left">{{ route.origin }}</td>
+          <td style="text-align: left">{{ route.destination }}</td>
           <td class="text-end">{{ route.price }}</td>
           <td>
-            <button class="btn btn-primary btn-sm" @click="openBusModal(route.id)">
+            <button
+              class="btn btn-primary btn-sm"
+              @click="openBusModal(route.id)"
+            >
               Book
             </button>
           </td>
@@ -59,9 +62,14 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
-              Select a Bus for {{ selectedRoute.origin }} → {{ selectedRoute.destination }}
+              Select a Bus for {{ selectedRoute.origin }} →
+              {{ selectedRoute.destination }}
             </h5>
-            <button type="button" class="btn-close" @click="closeModal()"></button>
+            <button
+              type="button"
+              class="btn-close"
+              @click="closeModal()"
+            ></button>
           </div>
           <div class="modal-body">
             <ul class="list-group">
@@ -70,8 +78,17 @@
                 :key="bus.id"
                 class="list-group-item d-flex justify-content-between align-items-center"
               >
-                {{ bus.plate_number }}
-                <button class="btn btn-success btn-sm" @click="bookTicket(bus)">Select</button>
+                {{ bus.plate_number }}, seats: {{ bus.available_seats }}
+                <button
+                  class="btn btn-sm"
+                  :class="
+                    bus.available_seats === 0 ? 'btn-secondary' : 'btn-success'
+                  "
+                  @click="bookTicket(bus)"
+                  :disabled="bus.available_seats === 0"
+                >
+                  {{ bus.available_seats === 0 ? "Full" : "Select" }}
+                </button>
               </li>
             </ul>
             <div v-if="filteredBuses.length === 0" class="text-center mt-2">
@@ -107,7 +124,9 @@ export default {
     // Filter routes by search
     filteredRoutes() {
       return this.routes.filter((r) =>
-        `${r.origin} ${r.destination}`.toLowerCase().includes(this.search.toLowerCase())
+        `${r.origin} ${r.destination}`
+          .toLowerCase()
+          .includes(this.search.toLowerCase())
       );
     },
     // Calculate total pages
@@ -184,9 +203,9 @@ export default {
       } catch (err) {
         console.error("Failed to book ticket:", err);
 
-  // Show backend error detail if available
-  const message = err.response?.data?.detail || "Error booking ticket!";
-  alert(message);
+        // Show backend error detail if available
+        const message = err.response?.data?.detail || "Error booking ticket!";
+        alert(message);
       }
     },
   },
@@ -194,5 +213,4 @@ export default {
 </script>
 
 <style scoped>
-
 </style>

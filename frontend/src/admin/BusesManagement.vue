@@ -26,7 +26,7 @@
         <tbody>
           <tr v-for="bus in filteredBuses" :key="bus.id">
             <td>{{ bus.plate_number }}</td>
-            <td>{{ bus.seats }} seats</td>
+            <td>{{ bus.capacity }} seats</td>
             <td class="text-center">
               <div class="btn-group">
                 <button class="btn btn-sm btn-outline-purple me-1" @click="editBus(bus)">
@@ -63,7 +63,7 @@
               </div>
               <div class="mb-3">
                 <label for="capacity" class="form-label">Capacity</label>
-                <input type="number" class="form-control" id="capacity" v-model.number="currentBus.seats" required>
+                <input type="number" class="form-control" id="capacity" v-model.number="currentBus.capacity" required>
               </div>
               <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-secondary me-2" @click="closeModal">Cancel</button>
@@ -88,7 +88,7 @@ export default {
   data() {
     return {
       buses: [],
-      currentBus: { id: null, plate_number: "", seats: 0 },
+      currentBus: { id: null, plate_number: "", capacity: 0 },
       isEditing: false,
       search: "",
     };
@@ -119,7 +119,7 @@ export default {
     },
     openAddBusModal() {
       this.isEditing = false;
-      this.currentBus = { id: null, plate_number: "", seats: 0 };
+      this.currentBus = { id: null, plate_number: "", capacity: 0 };
       nextTick(() => {
         new bootstrap.Modal(this.$refs.busModal).show();
       });

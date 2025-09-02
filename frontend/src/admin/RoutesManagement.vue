@@ -112,7 +112,7 @@
               <select id="busSelect" class="form-select" v-model="selectedBusId">
                 <option value="">-- Select a bus --</option>
                 <option v-for="bus in allBuses" :key="bus.id" :value="bus.id">
-                  {{ bus.plate_number }} ({{ bus.seats }} seats)
+                  {{ bus.plate_number }} ({{ bus.capacity }} seats)
                 </option>
               </select>
             </div>

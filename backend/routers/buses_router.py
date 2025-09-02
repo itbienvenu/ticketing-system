@@ -65,13 +65,14 @@ async def get_buses_by_route(route_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Route not found")
 
     # return buses with route_ids
+    
     result = []
     for bus in route.buses:
         result.append(BusOut(
             id=bus.id,
             plate_number=bus.plate_number,
             capacity=bus.capacity,
-            available_seats=bus.available_seats,
+            available_seats=bus.capacity - bus.available_seats,
             created_at=bus.created_at,
             route_ids=[r.id for r in bus.routes]
         ))
@@ -92,7 +93,7 @@ async def get_all_buses(db: Session = Depends(get_db)):
             "id": bus.id,
             "plate_number": bus.plate_number,
             "capacity": bus.capacity,
-            "available_seats":bus.available_seats,
+            "available_seats":bus.capacity - bus.available_seats,
             "created_at": bus.created_at,
             "route_ids": route_ids,
         }
