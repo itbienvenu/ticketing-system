@@ -62,7 +62,7 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="Route not found")
     
     # Checking the if ticket is not assigned before
-    
+
     existing_ticket = db.query(Ticket).filter(
         Ticket.user_id == str(ticket_req.user_id),
         Ticket.route_id == str(ticket_req.route_id),
@@ -126,7 +126,7 @@ def get_all_tickets(db: Session = Depends(get_db)):
         orm.joinedload(Ticket.user),
         orm.joinedload(Ticket.route),
         orm.joinedload(Ticket.bus)
-    ).all()
+    ).filter(Ticket.status != "deleted").all()
     
     response_data = []
     for ticket in tickets:
@@ -168,17 +168,30 @@ async def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
 
 @router.put("/{ticket_id}", dependencies=[Depends(get_current_user)])
 async def delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
-    # find ticket
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    # Find ticket
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id, Ticket.mode == "active").first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    # update status instead of hard deleting
+    # Update bus available seats
+    bus = db.query(Bus).filter(Bus.id == ticket.bus_id).first()
+    if bus and bus.available_seats > 0:
+        bus.available_seats -= 1 
+
+    # Soft delete the ticket
     ticket.mode = "deleted"
+    ticket.status = "cancelled"
+
     db.commit()
     db.refresh(ticket)
 
-    return {"message": "Ticket  deleted", "ticket_id": str(ticket.id), "status": ticket.status}
+    return {
+        "message": "Ticket deleted and seat updated",
+        "ticket_id": str(ticket.id),
+        "status": ticket.status,
+        "bus_available_seats": bus.available_seats if bus else None
+    }
+
 
 @router.get("/users/{user_id}", response_model=list[TicketResponse], dependencies=[Depends(get_current_user)])
 async def list_user_tickets(user_id: str, db: Session = Depends(get_db)):
