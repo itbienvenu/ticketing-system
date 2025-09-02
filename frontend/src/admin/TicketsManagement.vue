@@ -27,9 +27,9 @@
         <tbody>
           <tr v-for="ticket in filteredTickets" :key="ticket.id">
             <td>{{ ticket.id }}</td>
-            <td>{{ ticket.user.name }}</td>
+            <td>{{ ticket.full_name }}</td>
             <td>{{ ticket.route.origin }} → {{ ticket.route.destination }}</td>
-            <td>{{ ticket.bus.plate_number }}</td>
+            <td>{{ ticket.bus }}</td>
             <td>
               <span :class="getStatusBadge(ticket.status)">{{ ticket.status }}</span>
             </td>

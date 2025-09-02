@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
+from typing import List
+
 from sqlalchemy.orm import Session
+from sqlalchemy import orm
 from datetime import datetime, UTC
 import uuid
 import qrcode
@@ -82,7 +85,7 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
         created_at=datetime.now(UTC),
         mode='active'
     )
-    
+
     if bus.available_seats >= bus.capacity:
         raise HTTPException(status_code=404, detail="Bus is overloaded")
     
@@ -101,6 +104,36 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
     )
 
 
+# Endpoint to list tickets
+@router.get("/", response_model=List[TicketResponse], dependencies=[Depends(get_current_user), Depends(check_permission("see_all_tickets"))])
+def get_all_tickets(db: Session = Depends(get_db)):
+    # Eagerly load the related user and route data in a single query
+    tickets = db.query(Ticket).options(
+        orm.joinedload(Ticket.user),
+        orm.joinedload(Ticket.route),
+        orm.joinedload(Ticket.bus)
+    ).all()
+    
+    response_data = []
+    for ticket in tickets:
+        ticket_data = {
+            "id": ticket.id,
+            "user_id": ticket.user_id,
+            "full_name": ticket.user.full_name if ticket.user else None,
+            "qr_code": ticket.qr_code,
+            "status": ticket.status,
+            "created_at": ticket.created_at,
+            "mode": ticket.mode,
+            "route": {
+                "origin": ticket.route.origin if ticket.route else None,
+                "destination": ticket.route.destination if ticket.route else None,
+                "price":ticket.route.price if ticket.route else None
+            },
+            "bus": ticket.bus.plate_number  if ticket.bus else None
+        }
+        response_data.append(ticket_data)
+        
+    return response_data
 
 @router.get("/{ticket_id}", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
 async def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
