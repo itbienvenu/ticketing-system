@@ -33,10 +33,15 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now(UTC))
 
+    # 🔹 Link staff users to a company (nullable for customers)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=True)
+    company = relationship("Company", back_populates="staff")
 
+    # 🔹 Existing relationships
     roles = relationship("Role", secondary=user_roles, back_populates="users")
-    tickets = relationship("Ticket", back_populates="user")      # <--- add this
+    tickets = relationship("Ticket", back_populates="user")
     payments = relationship("Payment", back_populates="user")
+
 
 
 class Role(Base):
@@ -85,6 +90,8 @@ class Bus(Base):
     )
 
     tickets = relationship("Ticket", back_populates="bus")
+    company_id = Column(String, ForeignKey("companies.id"))
+    company = relationship("Company", back_populates="buses")
 
 class Route(Base):
     __tablename__ = "routes"
@@ -104,6 +111,8 @@ class Route(Base):
     )
 
     tickets = relationship("Ticket", back_populates="route")
+    company_id = Column(String, ForeignKey("companies.id"))
+    company = relationship("Company", back_populates="routes")  
 
 
 class Ticket(Base):
@@ -111,7 +120,8 @@ class Ticket(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String, ForeignKey("users.id"))
     bus_id = Column(String, ForeignKey("buses.id"))
-    route_id = Column(String, ForeignKey("routes.id")) 
+    route_id = Column(String, ForeignKey("routes.id"))
+    company_id = Column(String, ForeignKey("companies.id"))  
     qr_code = Column(String, nullable=False)
     status = Column(String, default="booked")
     mode = Column(String, default="active")
@@ -119,8 +129,9 @@ class Ticket(Base):
 
     user = relationship("User", back_populates="tickets")
     bus = relationship("Bus", back_populates="tickets")
-    route = relationship("Route", back_populates="tickets")  # link to Route
-    payments = relationship("Payment", back_populates="ticket") # link to payments tble
+    route = relationship("Route", back_populates="tickets")
+    company = relationship("Company", back_populates="tickets")  
+    payments = relationship("Payment", back_populates="ticket")
 
 # The payment 
 
@@ -143,3 +154,19 @@ class Payment(Base):
 
     ticket = relationship("Ticket", back_populates="payments")
     user = relationship("User", back_populates="payments")
+
+
+class Company(Base):
+    __tablename__ = "companies"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=True)
+    phone_number = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.now(UTC))
+
+    staff = relationship("User", back_populates="company")  
+    buses = relationship("Bus", back_populates="company")
+    routes = relationship("Route", back_populates="company")
+    tickets = relationship("Ticket", back_populates="company")  

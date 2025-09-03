@@ -6,6 +6,7 @@ from schemas.BusesScheme import BusCreate, BusOut, UpdateBus
 from uuid import uuid4, UUID
 from typing import List
 from methods.functions import get_current_user
+from methods.permissions import check_permission
 from datetime import datetime, UTC
 router = APIRouter(prefix="/api/v1/buses", tags=["Buses"])
 
@@ -125,8 +126,7 @@ def update_bus(bus_id: str, bus_update: UpdateBus, db: Session = Depends(get_db)
 
 # Endpoint to delete the Bus
 
-@router.delete("/{bus_id}", dependencies=[Depends(get_db)])
-
+@router.delete("/{bus_id}", dependencies=[Depends(get_db), Depends(check_permission("delete_bus"))])
 def delete_bus(bus_id: str, db: Session = Depends(get_db)):
     bus = db.query(Bus).filter(Bus.id == bus_id).first()
 

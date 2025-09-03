@@ -75,7 +75,8 @@ export default {
       if (!this.search) return this.tickets;
       const searchTerm = this.search.toLowerCase();
       return this.tickets.filter(ticket =>
-        ticket.full_name.toLowerCase().includes(searchTerm) ||
+        // ticket.full_name.toLowerCase().includes(searchTerm) ||
+        (ticket.full_name ?? "").toLowerCase().includes(searchTerm) ||
         ticket.route.origin.toLowerCase().includes(searchTerm) ||
         ticket.route.destination.toLowerCase().includes(searchTerm) ||
         ticket.status.toLowerCase().includes(searchTerm) ||
