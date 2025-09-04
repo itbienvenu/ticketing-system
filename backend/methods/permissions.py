@@ -10,7 +10,7 @@ def check_permission(permission_name: str):
         user_permissions = (
             db.query(Permission.name)
             .join(Permission.roles)  # Permission → Role
-            .join(Role.users)        # Role → User
+            .join(Role.users)  # Role → User
             .filter(User.id == current_user.id)  # Only current user
             .all()
         )
@@ -24,3 +24,13 @@ def check_permission(permission_name: str):
         return True
     return wrapper
 
+def get_current_company_user(current_user: User = Depends(get_current_user)):
+    """
+    Dependency that checks if the current user is associated with a company.
+    """
+    if not current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to manage company resources."
+        )
+    return current_user

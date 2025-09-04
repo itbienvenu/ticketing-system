@@ -8,6 +8,7 @@ class RegisterRoute(BaseModel):
     origin: str
     destination: str
     price: int
+    company_id: Optional[str] = None
     # created_at: Optional[datetime] = Field(default_factory=datetime.now(UTC))
     
 class RouteOut(BaseModel):

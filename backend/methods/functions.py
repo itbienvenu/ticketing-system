@@ -47,7 +47,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
-        role: str = payload.get("role")
+        company_id: str = payload.get("company_id")
         if user_id is None:
             raise credentials_exception
     except JWTError:
@@ -113,7 +113,7 @@ def login_user(db: Session, user: LoginUser):
     token = create_access_token(
         data={
             "sub":str(check_user.id),
-            # "role": str(check_user.role)
+            "company_id": str(check_user.company_id)
             }, 
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {
@@ -143,3 +143,28 @@ def register_route(db: Session, route: RegisterRoute):
     return db_route
         
     
+
+def register_route(db: Session, route: RegisterRoute):
+    """
+    Creates a new route entry in the database.
+
+    Args:
+        db (Session): The SQLAlchemy database session.
+        route (RegisterRoute): The Pydantic model containing the route data.
+
+    Returns:
+        Route: The newly created Route database object.
+    """
+    # Create a new Route database model instance from the Pydantic model
+    new_route = Route(**route.model_dump())
+    
+    # Add the new route to the database session
+    db.add(new_route)
+    
+    # Commit the transaction to save the route to the database
+    db.commit()
+    
+    # Refresh the new_route object to get its database-generated ID
+    db.refresh(new_route)
+    
+    return new_route
