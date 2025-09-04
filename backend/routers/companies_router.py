@@ -117,3 +117,16 @@ async def get_company_by_id(company_id: str, db: Session = Depends(get_db)):
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     return company
+
+# Endpoint to delete any company
+
+@router.delete("/{company_id}", dependencies=[Depends(get_current_super_admin_user)])
+async def delete_company(company_id: str, db: Session = Depends(get_db)):
+    """This action is sudo, means super users can only do this"""
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    db.delete(company)
+    db.commit()
+
+    return {"message":"Company deleted well"}

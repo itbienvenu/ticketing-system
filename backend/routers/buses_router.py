@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import orm
 from database.models import Bus, Route, bus_routes, Payment, User
 from database.dbs import get_db
-from schemas.BusesScheme import BusCreate, BusOut, UpdateBus
+from schemas.BusesScheme import BusCreate, BusOut, UpdateBus, BusWithCompanyResponse
 from uuid import uuid4, UUID
 from typing import List
 # from methods.functions import get_current_company_user  # Renamed for clarity
-from methods.permissions import check_permission, get_current_company_user
+from methods.permissions import check_permission, get_current_user, get_current_company_user
+from methods.functions import get_current_user
 from datetime import datetime, UTC
 
 router = APIRouter(prefix="/api/v1/buses", tags=["Buses"])
@@ -177,7 +179,27 @@ def delete_bus(
         "message": f"Deleted bus with id: {bus_id}"
     }
 
-# ---
+@router.get("/user_get_buses", response_model=List[BusWithCompanyResponse])
+def get_all_buses(db: Session = Depends(get_db)):
+    """
+    Allows any user to see all available buses and their associated companies.
+    """
+    buses = db.query(Bus).options(orm.joinedload(Bus.company)).all()
+    
+    response_data = []
+    for bus in buses:
+        company_data = None
+        if bus.company:
+            company_data = {"name": bus.company.name}
+        
+        response_data.append(BusWithCompanyResponse(
+            id=bus.id,
+            plate_number=bus.plate_number,
+            available_seats=bus.capacity - bus.available_seats,
+            capacity=bus.capacity,
+            company=company_data
+        ))
+    return response_data
 
 ### Key Changes and Rationale
 

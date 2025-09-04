@@ -22,3 +22,21 @@ class UpdateBus(BaseModel):
     plate_number: Optional[str] = None
     capacity: Optional[int] = None
     route_ids: Optional[List] = None  
+
+
+class CompanyName(BaseModel):
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
+class BusWithCompanyResponse(BaseModel):
+    id: UUID
+    plate_number: str
+    company: Optional[CompanyName] = None
+    available_seats: int
+    capacity: int
+
+    class Config:
+        from_attributes = True

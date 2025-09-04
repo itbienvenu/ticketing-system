@@ -35,8 +35,9 @@ app.include_router(tickets_router.router)
 app.include_router(buses_router.router)
 app.include_router(payments_router.router)
 
+
 # Home route
-@app.get("/api/v1/")
+@app.get("/")
 def home():
     """The home route"""
     return {"message": "Home Page"}
