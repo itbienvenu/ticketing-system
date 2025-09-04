@@ -28,7 +28,7 @@ class TicketResponse(BaseModel):
     status: str
     created_at: datetime
     mode: str
-    route: Optional[RouteInfo] = None
+    route: Optional[str] = None
     bus:Optional[str] = None
 
     class Config:

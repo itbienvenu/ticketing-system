@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 from sqlalchemy import orm
@@ -18,18 +18,19 @@ from dotenv import load_dotenv
 
 from database.models import Ticket, User, Bus, Route
 from schemas.TicketsScheme import TicketCreate, TicketResponse
-from database.dbs import get_db 
+from database.dbs import get_db
 
 from methods.functions import get_current_user
 from methods.permissions import check_permission
 
 router = APIRouter(prefix="/api/v1/tickets", tags=['Ticket Managment Endpoint'])
 load_dotenv()
-SECRET_KEY = os.environ.get("TICKET_SECRET_KEY") 
-key_bytes = SECRET_KEY.encode()                    
+SECRET_KEY = os.environ.get("TICKET_SECRET_KEY")
+key_bytes = SECRET_KEY.encode()
 
 
 async def generate_signed_qr(payload: dict) -> str:
+    """Generates a signed QR code as a base64 string and a signed token."""
     ticket_id = payload["ticket_id"].encode()  # only ticket_id
     signature = hmac.new(key_bytes, ticket_id, hashlib.sha256).digest()
     token = base64.urlsafe_b64encode(ticket_id + b"." + signature).decode()
@@ -46,28 +47,37 @@ async def generate_signed_qr(payload: dict) -> str:
     return qr_base64, token
 
 
-@router.post("/", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
+@router.post("/", response_model=TicketResponse, status_code=status.HTTP_201_CREATED)
 async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db)):
-    
+    """
+    Creates a new ticket for any user, associating it with the company based on the route.
+    """
+    # Verify the user exists
     user = db.query(User).filter(User.id == str(ticket_req.user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    bus = db.query(Bus).filter(Bus.id == str(ticket_req.bus_id)).first()
-    if not bus:
-        raise HTTPException(status_code=404, detail="Bus not found")
-
+    # Find the route to get its company ID
     route = db.query(Route).filter(Route.id == str(ticket_req.route_id)).first()
     if not route:
         raise HTTPException(status_code=404, detail="Route not found")
     
-    # Checking the if ticket is not assigned before
+    company_id = route.company_id
+    if not company_id:
+        raise HTTPException(status_code=500, detail="Route is not associated with a company")
 
+    # Find the bus, ensuring it belongs to the same company as the route
+    bus = db.query(Bus).filter(Bus.id == str(ticket_req.bus_id), Bus.company_id == company_id).first()
+    if not bus:
+        raise HTTPException(status_code=404, detail="Bus not found or does not belong to the route's company")
+
+    # Checking for existing tickets
     existing_ticket = db.query(Ticket).filter(
         Ticket.user_id == str(ticket_req.user_id),
         Ticket.route_id == str(ticket_req.route_id),
-        Ticket.status == "booked",  # or 'active' depending on your logic
-        Ticket.mode == 'active'
+        Ticket.status == "booked",
+        Ticket.mode == 'active',
+        Ticket.company_id == company_id
     ).first()
 
     if existing_ticket:
@@ -76,7 +86,11 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
             detail="You have already booked a ticket for this route"
         )
 
-    
+    # Check for bus capacity
+    if bus.available_seats >= bus.capacity:
+        raise HTTPException(status_code=404, detail="Bus is overloaded")
+
+    # Generate QR code and signed token
     payload = {
         "ticket_id": str(uuid.uuid4()),
         "user_id": str(ticket_req.user_id),
@@ -88,7 +102,7 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
 
     qr_base64, signed_token = await generate_signed_qr(payload)
 
-    
+    # Create new ticket with company_id
     new_ticket = Ticket(
         id=payload["ticket_id"],
         user_id=str(ticket_req.user_id),
@@ -97,12 +111,11 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
         qr_code=signed_token,
         status="booked",
         created_at=datetime.now(UTC),
-        mode='active'
+        mode='active',
+        company_id=company_id
     )
+    route_ifo = db.query(Route).filter(Route.id == str(ticket_req.route_id)).first()
 
-    if bus.available_seats >= bus.capacity:
-        raise HTTPException(status_code=404, detail="Bus is overloaded")
-    
     bus.available_seats += 1
     db.add(new_ticket)
     db.commit()
@@ -114,25 +127,36 @@ async def create_ticket(ticket_req: TicketCreate, db: Session = Depends(get_db))
         qr_code=qr_base64,
         status=new_ticket.status,
         created_at=new_ticket.created_at,
-        mode=new_ticket.mode
+        mode=new_ticket.mode,
+        route= str(ticket_req.route_id),
+        bus=str(ticket_req.bus_id)
     )
 
 
-# Endpoint to list tickets
+# Endpoint to list tickets for the company
 @router.get("/", response_model=List[TicketResponse], dependencies=[Depends(get_current_user), Depends(check_permission("see_all_tickets"))])
-def get_all_tickets(db: Session = Depends(get_db)):
-    # Eagerly load the related user and route data in a single query
+def get_all_tickets(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """
+    Retrieves a list of all tickets belonging to the user's company.
+    """
+    company_id = user.company_id
+    if not company_id:
+        raise HTTPException(status_code=403, detail="User is not associated with a company")
+
     tickets = db.query(Ticket).options(
         orm.joinedload(Ticket.user),
         orm.joinedload(Ticket.route),
         orm.joinedload(Ticket.bus)
-    ).filter(Ticket.status != "deleted").all()
+    ).filter(
+        Ticket.company_id == company_id,
+        Ticket.status != "deleted"
+    ).all()
     
     response_data = []
     for ticket in tickets:
         ticket_data = {
             "id": ticket.id,
-            "user_id": str(ticket.user_id),
+            "user_id": str(ticket.user.id),
             "full_name": ticket.user.full_name if ticket.user else None,
             "qr_code": ticket.qr_code,
             "status": ticket.status,
@@ -141,19 +165,29 @@ def get_all_tickets(db: Session = Depends(get_db)):
             "route": {
                 "origin": ticket.route.origin if ticket.route else None,
                 "destination": ticket.route.destination if ticket.route else None,
-                "price":ticket.route.price if ticket.route else None
+                "price": ticket.route.price if ticket.route else None
             },
-            "bus": ticket.bus.plate_number  if ticket.bus else None
+            "bus": ticket.bus.plate_number if ticket.bus else None
         }
         response_data.append(ticket_data)
         
     return response_data
 
 @router.get("/{ticket_id}", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
-async def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+async def get_ticket(ticket_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """
+    Retrieves a single ticket by its ID, restricted to the user's company.
+    """
+    # company_id = user.company_id
+    # if not company_id:
+    #     raise HTTPException(status_code=403, detail="User is not associated with a company")
+
+    ticket = db.query(Ticket).filter(
+        Ticket.id == ticket_id
+        # Ticket.company_id == company_id
+    ).first()
     if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket not found")
+        raise HTTPException(status_code=404, detail="Ticket not found or does not belong to your company")
 
     return TicketResponse(
         id=ticket.id,
@@ -165,13 +199,23 @@ async def get_ticket(ticket_id: str, db: Session = Depends(get_db)):
     )
 
 # Soft deleting the ticket by user
-
 @router.put("/{ticket_id}", dependencies=[Depends(get_current_user)])
-async def delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
+async def delete_ticket(ticket_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """
+    Soft-deletes a ticket, restricted to tickets belonging to the user's company.
+    """
+    company_id = user.company_id
+    if not company_id:
+        raise HTTPException(status_code=403, detail="User is not associated with a company")
+        
     # Find ticket
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id, Ticket.mode == "active").first()
+    ticket = db.query(Ticket).filter(
+        Ticket.id == ticket_id,
+        Ticket.mode == "active",
+        Ticket.company_id == company_id
+    ).first()
     if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket not found")
+        raise HTTPException(status_code=404, detail="Ticket not found or does not belong to your company")
 
     # Update bus available seats
     bus = db.query(Bus).filter(Bus.id == ticket.bus_id).first()
@@ -193,21 +237,17 @@ async def delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
     }
 
 
-@router.get("/users/{user_id}", response_model=list[TicketResponse], dependencies=[Depends(get_current_user)])
-async def list_user_tickets(user_id: str, db: Session = Depends(get_db)):
+@router.get("/my-tickets/", response_model=list[TicketResponse], dependencies=[Depends(get_current_user)])
+async def list_user_tickets(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """
+    Lists tickets for the current authenticated user only.
+    """
     tickets = db.query(Ticket).filter(
-        Ticket.user_id == str(user_id),
+        Ticket.user_id == str(user.id),
         Ticket.mode == 'active'
-        ).all()
+    ).all()
     response = []
     for t in tickets:
-        # qr_base64, _ = generate_signed_qr({
-        #     "ticket_id": t.id,
-        #     "user_id": t.user_id,
-        #     "bus_id": t.bus_id,
-        #     "route_id": t.route_id,
-        #     "created_at": t.created_at.isoformat()
-        # })
         response.append(TicketResponse(
             id=t.id,
             user_id=t.user_id,
@@ -220,14 +260,23 @@ async def list_user_tickets(user_id: str, db: Session = Depends(get_db)):
     return response
 
 
-
 @router.patch("/{ticket_id}/status", response_model=TicketResponse, dependencies=[Depends(get_current_user)])
-def update_ticket_status(ticket_id: str, status: str, db: Session = Depends(get_db)):
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket not found")
+def update_ticket_status(ticket_id: str, new_status: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """
+    Updates the status of a ticket, restricted to tickets belonging to the user's company.
+    """
+    company_id = user.company_id
+    if not company_id:
+        raise HTTPException(status_code=403, detail="User is not associated with a company")
 
-    ticket.status = status
+    ticket = db.query(Ticket).filter(
+        Ticket.id == ticket_id,
+        Ticket.company_id == company_id
+    ).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found or does not belong to your company")
+
+    ticket.status = new_status
     db.commit()
     db.refresh(ticket)
 
@@ -247,15 +296,25 @@ def update_ticket_status(ticket_id: str, status: str, db: Session = Depends(get_
         created_at=ticket.created_at
     )
 
-@router.delete("/admin_delete/{ticket_id}", dependencies=[Depends(get_current_user)])
-async def admin_delete_ticket(ticket_id: str, db: Session = Depends(get_db)):
+
+@router.delete("/admin_delete/{ticket_id}", dependencies=[Depends(get_current_user), Depends(check_permission("admin_delete_ticket"))])
+async def admin_delete_ticket(ticket_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """
+    Permanently deletes a ticket, restricted to tickets belonging to the user's company.
+    """
+    company_id = user.company_id
+    if not company_id:
+        raise HTTPException(status_code=403, detail="User is not associated with a company")
+        
     # find ticket
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    ticket = db.query(Ticket).filter(
+        Ticket.id == ticket_id,
+        Ticket.company_id == company_id
+    ).first()
     if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket not found")
+        raise HTTPException(status_code=404, detail="Ticket not found or does not belong to your company")
 
     db.delete(ticket)
     db.commit()
-
 
     return {"message": "Ticket deleted by admin"}
