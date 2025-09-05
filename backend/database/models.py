@@ -169,4 +169,64 @@ class Company(Base):
     staff = relationship("User", back_populates="company")  
     buses = relationship("Bus", back_populates="company")
     routes = relationship("Route", back_populates="company")
-    tickets = relationship("Ticket", back_populates="company")  
+    tickets = relationship("Ticket", back_populates="company") 
+    stations = relationship("BusStation", back_populates="company")
+    route_stations = relationship("RouteStation", back_populates="company")
+    schedules = relationship("Schedule", back_populates="company") 
+
+
+class BusStation(Base):
+    __tablename__ = "bus_stations"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String, nullable=False)
+    location = Column(String, nullable=True)  # city/coordinates/address
+    created_at = Column(DateTime, default=datetime.now(UTC))
+
+    #  Link to company
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    company = relationship("Company", back_populates="stations")
+
+    # Relationships
+    route_stations = relationship("RouteStation", back_populates="station")
+
+
+
+class RouteStation(Base):
+    __tablename__ = "route_stations"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    route_id = Column(String, ForeignKey("routes.id"), nullable=False)
+    station_id = Column(String, ForeignKey("bus_stations.id"), nullable=False)
+    stop_order = Column(Integer, nullable=False) 
+
+    #  Optional company link (for filtering)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+
+    # Relationships
+    route = relationship("Route", back_populates="route_stations")
+    station = relationship("BusStation", back_populates="route_stations")
+    schedules = relationship("Schedule", back_populates="route_station")
+    company = relationship("Company", back_populates="route_stations")
+
+class Schedule(Base):
+    __tablename__ = "schedules"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    route_station_id = Column(String, ForeignKey("route_stations.id"), nullable=False)
+    departure_time = Column(DateTime, nullable=False)
+    arrival_time = Column(DateTime, nullable=True)
+
+    #  company link
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+
+    # Relationships
+    route_station = relationship("RouteStation", back_populates="schedules")
+    company = relationship("Company", back_populates="schedules")
+
+
+Route.route_stations = relationship("RouteStation", back_populates="route")
+
+
+Ticket.schedule_id = Column(String, ForeignKey("schedules.id"), nullable=True)
+Ticket.schedule = relationship("Schedule", back_populates="tickets")
