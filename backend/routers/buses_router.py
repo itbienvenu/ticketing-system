@@ -200,13 +200,3 @@ def get_all_buses(db: Session = Depends(get_db)):
             company=company_data
         ))
     return response_data
-
-### Key Changes and Rationale
-
-# * **`get_current_company_user` Dependency**: This new dependency is used in every endpoint. It validates that the user is not only authenticated but is also a staff member of a company. This is the **primary security measure** for data isolation.
-# * **Data Filtering**: All SQLAlchemy queries (`.filter()`) now include the condition `Bus.company_id == current_user.company_id`. This guarantees that a company user can only perform operations on buses and routes that belong to their company.
-# * **Plate Number Uniqueness**: The `create_bus` endpoint's uniqueness check has been updated to be specific to the company: `Bus.plate_number == bus.plate_number, Bus.company_id == current_user.company_id`. This allows different companies to use the same plate number without conflicts.
-# * **Route Association**: In the `create_bus` and `update_bus` endpoints, when attaching or updating routes, an additional filter `Route.company_id == current_user.company_id` is applied. This prevents a user from associating their bus with a route from another company.
-# * **Permission Check**: The `check_permission` dependency remains useful for role-based access control within a company (e.g., only a "manager" can delete a bus). The new `get_current_company_user` dependency ensures that even with the correct role, a user can only affect resources within their own company.
-
-# This refactored file is a complete solution for bus management in your multi-tenant system.

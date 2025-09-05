@@ -73,6 +73,12 @@ bus_routes = Table(
     Column("route_id", String, ForeignKey("routes.id"), primary_key=True)
 )
 
+bus_schedules = Table(
+    "bus_schedules",
+    Base.metadata,
+    Column("bus_id", String, ForeignKey("buses.id"), primary_key=True),
+    Column("schedule_id", String, ForeignKey("schedules.id"), primary_key=True)
+)
 class Bus(Base):
     __tablename__ = "buses"
 
@@ -92,6 +98,9 @@ class Bus(Base):
     tickets = relationship("Ticket", back_populates="bus")
     company_id = Column(String, ForeignKey("companies.id"))
     company = relationship("Company", back_populates="buses")
+    schedules = relationship("Schedule", secondary=bus_schedules, back_populates="buses")
+
+
 
 class Route(Base):
     __tablename__ = "routes"
@@ -223,6 +232,9 @@ class Schedule(Base):
     # Relationships
     route_station = relationship("RouteStation", back_populates="schedules")
     company = relationship("Company", back_populates="schedules")
+    tickets = relationship("Ticket", back_populates="schedule")
+    buses = relationship("Bus", secondary=bus_schedules, back_populates="schedules")
+
 
 
 Route.route_stations = relationship("RouteStation", back_populates="route")
