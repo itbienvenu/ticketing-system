@@ -1,18 +1,21 @@
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
 class ScheduleBase(BaseModel):
+    route_station_id: str
     departure_time: datetime
-    arrival_time: Optional[datetime] = None
+    arrival_time: datetime
 
-# Create schema (company_id inferred from current_user)
 class ScheduleCreate(ScheduleBase):
-    route_station_id: str  # the route station ID
+    pass
 
-# Response schema
+class ScheduleUpdate(BaseModel):
+    departure_time: datetime
+    arrival_time: datetime
+
 class ScheduleResponse(ScheduleBase):
     id: str
-    route_station_id: str
     company_id: str
 
     class Config:
