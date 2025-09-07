@@ -5,9 +5,12 @@ from database.dbs import get_db
 from sqlalchemy.orm import Session
 from schemas.RoutesScheme import RegisterRoute, RouteOut, UpdateRoute, AssignBusRequest
 from uuid import UUID
-from database.models import Route, Bus, BusStation
+from database.models import Route, Bus, BusStation, Company
 from typing import List
 from datetime import datetime, UTC
+from sqlalchemy.orm import aliased
+from fastapi import Depends, HTTPException, APIRouter
+from typing import List
 
 
 router = APIRouter(prefix="/api/v1/routes", tags=['Routes End Points'])
@@ -36,6 +39,19 @@ async def register_routes(
     if not origin_station or not destination_station:
         raise HTTPException(status_code=400, detail="Invalid origin or destination station ID")
 
+    # ✅ Check for duplicates
+    existing_route = db.query(Route).filter(
+        Route.origin_id == str(route.origin_id),
+        Route.destination_id == str(route.destination_id),
+        Route.company_id == str(company_id)
+    ).first()
+
+    if existing_route:
+        raise HTTPException(
+            status_code=400,
+            detail="This route already exists for your company"
+        )
+
     # Create route object
     new_route = Route(
         origin_id=str(route.origin_id),
@@ -47,7 +63,7 @@ async def register_routes(
     db.commit()
     db.refresh(new_route)
 
-
+    # Return with names instead of IDs
     return RouteOut(
         id=new_route.id,
         price=new_route.price,
@@ -57,23 +73,53 @@ async def register_routes(
     )
 
 
+from sqlalchemy.orm import joinedload
 
 @router.get("/", response_model=List[RouteOut], dependencies=[Depends(get_current_user)])
 async def get_all_routes(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    """
-    Retrieves a list of all routes belonging to the user's company.
-    """
-    # FIX: Use dot notation to access the company_id.
     company_id = user.company_id
     if not company_id:
         raise HTTPException(status_code=403, detail="User is not associated with a company")
 
-    routes = db.query(Route).filter(Route.company_id == company_id).all()
+    # Alias bus stations for clarity
+    OriginStation = aliased(BusStation)
+    DestinationStation = aliased(BusStation)
+
+    # Join routes with bus_stations twice
+    routes = (
+        db.query(
+            Route.id,
+            Route.price,
+            Route.created_at,
+            Route.company_id,
+            OriginStation.name.label("origin"),
+            DestinationStation.name.label("destination"),
+            
+        )
+        .join(OriginStation, OriginStation.id == Route.origin_id)
+        .join(DestinationStation, DestinationStation.id == Route.destination_id)
+        # .filter(Route.company_id == company_id)
+        .all()
+    )
+
+    # Map query results into RouteOut
+    # company_name = db.query(Company).filter(Company.id == company_id).first()
     routes_list = [
-        {**r.__dict__, 'created_at': datetime.now(UTC)} if r.created_at is None else r
+        RouteOut(
+            id=r.id,
+            price=r.price,
+            origin=r.origin,
+            destination=r.destination,
+            company_id = r.company_id,
+            created_at=r.created_at or datetime.now(UTC)
+        )
         for r in routes
     ]
+
     return routes_list
+
+
+
 
 @router.put("/{route_id}", response_model=UpdateRoute, dependencies=[Depends(check_permission("update_route"))])
 async def update_route(route_id: UUID, updated_data: UpdateRoute, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):

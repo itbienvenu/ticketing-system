@@ -12,14 +12,14 @@ class RegisterRoute(BaseModel):
 
 
 class RouteOut(BaseModel):
-    id: UUID
-    price: int
-    origin: str  # return station name
-    destination: str  # return station name
+    id: Optional[str] = None
+    origin: Optional[str] = None
+    destination: Optional[str] = None
+    company_id: Optional[str] = None
     created_at: datetime
 
     class Config:
-        orm_mode = True  # allows SQLAlchemy object -> Pydantic
+        from_attributes = True # allows SQLAlchemy object -> Pydantic
         
 
 class UpdateRoute(BaseModel):
