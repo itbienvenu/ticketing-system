@@ -14,8 +14,8 @@ class BusStationCreate(BusStationBase):
 # Response schema
 class BusStationResponse(BusStationBase):
     id: str
-    company_id: str
     created_at: datetime
+    company_id: str
 
     class Config:
         orm_mode = True
