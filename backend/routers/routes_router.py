@@ -5,49 +5,57 @@ from database.dbs import get_db
 from sqlalchemy.orm import Session
 from schemas.RoutesScheme import RegisterRoute, RouteOut, UpdateRoute, AssignBusRequest
 from uuid import UUID
-from database.models import Route, Bus
+from database.models import Route, Bus, BusStation
 from typing import List
 from datetime import datetime, UTC
 
 
 router = APIRouter(prefix="/api/v1/routes", tags=['Routes End Points'])
 
-@router.post("/register", dependencies=[Depends(check_permission("create_route"))], response_model=RegisterRoute)
-async def register_routes(route: RegisterRoute, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+@router.post(
+    "/register",
+    dependencies=[Depends(check_permission("create_route"))],
+    response_model=RouteOut
+)
+async def register_routes(
+    route: RegisterRoute,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
     """
     Registers a new route, associating it with the user's company.
     """
-    # FIX: Access the company_id using dot notation, as the user object is a class instance.
     company_id = user.company_id
     if not company_id:
         raise HTTPException(status_code=403, detail="User is not associated with a company")
 
-    # This is the correct fix for the previous TypeError:
-    # We add the company_id to the route object before calling the function.
-    route.company_id = company_id
-    
-    return register_route(db, route)
+    # Ensure origin and destination stations exist
+    origin_station = db.query(BusStation).filter(BusStation.id == str(route.origin_id)).first()
+    destination_station = db.query(BusStation).filter(BusStation.id == str(route.destination_id)).first()
 
-@router.get("/{route_id}", response_model=RouteOut, dependencies=[Depends(get_current_user)])
-async def get_route_by_id(route_id: UUID, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    """
-    Retrieves a single route by its unique ID, restricted to the user's company.
-    """
-    # FIX: Use dot notation to access the company_id.
-    company_id = user.company_id
-    if not company_id:
-        raise HTTPException(status_code=403, detail="User is not associated with a company")
+    if not origin_station or not destination_station:
+        raise HTTPException(status_code=400, detail="Invalid origin or destination station ID")
 
-    get_route = db.query(Route).filter(
-        Route.id == str(route_id),
-        Route.company_id == company_id
-    ).first()
-    
-    if not get_route:
-        raise HTTPException(status_code=404, detail="Route not found for this company")
-    if get_route.created_at is None:
-        get_route.created_at = datetime.now(UTC)
-    return get_route
+    # Create route object
+    new_route = Route(
+        origin_id=str(route.origin_id),
+        destination_id=str(route.destination_id),
+        price=route.price,
+        company_id=str(company_id)
+    )
+    db.add(new_route)
+    db.commit()
+    db.refresh(new_route)
+
+
+    return RouteOut(
+        id=new_route.id,
+        price=new_route.price,
+        origin=origin_station.name,
+        destination=destination_station.name,
+        created_at=new_route.created_at
+    )
+
 
 
 @router.get("/", response_model=List[RouteOut], dependencies=[Depends(get_current_user)])
@@ -157,3 +165,21 @@ async def assign_bus(payload: AssignBusRequest, db: Session = Depends(get_db), u
         "bus_id": bus.id,
         "assigned_buses": [b.id for b in route.buses]
     }
+
+@router.get("/{route_id}", response_model=RouteOut)
+def get_route(route_id: UUID, db: Session = Depends(get_db)):
+    route = db.query(Route).filter(Route.id == str(route_id)).first()
+    if not route:
+        raise HTTPException(status_code=404, detail="Route not found")
+    
+    # convert IDs to names
+    origin_station = db.query(BusStation).filter(BusStation.id == route.origin_id).first()
+    destination_station = db.query(BusStation).filter(BusStation.id == route.destination_id).first()
+    
+    return RouteOut(
+        id=route.id,
+        price=route.price,
+        origin=origin_station.name if origin_station else "Unknown",
+        destination=destination_station.name if destination_station else "Unknown",
+        created_at=route.created_at
+    )

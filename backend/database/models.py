@@ -160,8 +160,8 @@ class Route(Base):
     __tablename__ = "routes"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     # name = Column(String, nullable=False)
-    origin = Column(String, ForeignKey("bus_stations.id"))
-    destination = Column(String, ForeignKey("bus_stations.id"))
+    origin_id = Column(String, ForeignKey("bus_stations.id"))
+    destination_id = Column(String, ForeignKey("bus_stations.id"))
     price = Column(Float, nullable=False)  # overall route price
     company_id = Column(String, ForeignKey("companies.id"))
     created_at = Column(DateTime, default=datetime.now(UTC))

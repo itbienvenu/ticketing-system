@@ -3,7 +3,8 @@ from datetime import datetime
 from typing import Optional
 
 class ScheduleBase(BaseModel):
-    route_station_id: str
+    bus_id: str
+    route_segment_id: str
     departure_time: datetime
     arrival_time: datetime
 

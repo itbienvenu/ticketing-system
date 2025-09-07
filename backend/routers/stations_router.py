@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from database.models import BusStation, Schedule, Ticket, User
-from schemas.StationsScheme import BusStationCreate, BusStationResponse, ScheduleCreate, ScheduleResponse
+from schemas.StationsScheme import BusStationCreate, BusStationResponse
+from schemas.SchedulesScheme import ScheduleCreate, ScheduleResponse
 from methods.permissions import get_current_company_user, check_permission
 from database.dbs import get_db
 

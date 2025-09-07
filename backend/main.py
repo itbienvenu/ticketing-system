@@ -36,7 +36,7 @@ app.include_router(buses_router.router)
 app.include_router(payments_router.router)
 app.include_router(route_segment_router.router)
 app.include_router(stations_router.router)
-# app.include_router(schedules_router.router)
+app.include_router(schedules_router.router)
 
 
 
