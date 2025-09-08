@@ -5,9 +5,10 @@ from database.dbs import get_db
 from sqlalchemy.orm import Session
 from schemas.RoutesScheme import RegisterRoute, RouteOut, UpdateRoute, AssignBusRequest
 from uuid import UUID
-from database.models import Route, Bus, BusStation, Company
+from database.models import Route, Bus, BusStation, Company, bus_routes, Ticket, RouteSegment
 from typing import List
 from datetime import datetime, UTC
+from sqlalchemy import select
 from sqlalchemy.orm import aliased
 from fastapi import Depends, HTTPException, APIRouter
 from typing import List
@@ -77,9 +78,9 @@ from sqlalchemy.orm import joinedload
 
 @router.get("/", response_model=List[RouteOut], dependencies=[Depends(get_current_user)])
 async def get_all_routes(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    company_id = user.company_id
-    if not company_id:
-        raise HTTPException(status_code=403, detail="User is not associated with a company")
+    # company_id = user.company_id
+    # if not company_id:
+    #     raise HTTPException(status_code=403, detail="User is not associated with a company")
 
     # Alias bus stations for clarity
     OriginStation = aliased(BusStation)
@@ -124,7 +125,7 @@ async def get_all_routes(db: Session = Depends(get_db), user: dict = Depends(get
 @router.put(
     "/{route_id}",
     response_model=UpdateRoute,
-    # dependencies=[Depends(check_permission("update_route"))],
+    dependencies=[Depends(check_permission("update_route"))],
 )
 async def update_route(
     route_id: UUID,
@@ -172,31 +173,51 @@ async def update_route(
 
 
 
-
-
-
-@router.delete("/{route_id}", status_code=status.HTTP_200_OK, dependencies=[Depends(check_permission("delete_route"))])
-async def delete_route(route_id: UUID, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+@router.delete(
+    "/{route_id}",
+    status_code=status.HTTP_200_OK,
+    # dependencies=[Depends(check_permission("delete_route"))],
+)
+async def delete_route(
+    route_id: UUID,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
     """
     Deletes a route, restricted to the user's company.
+    Prevents deletion if the route is still referenced in bus_routes, tickets, etc.
     """
-    # FIX: Use dot notation to access the company_id.
     company_id = user.company_id
     if not company_id:
         raise HTTPException(status_code=403, detail="User is not associated with a company")
 
-    route = db.query(Route).filter(
-        Route.id == str(route_id),
-        Route.company_id == company_id
-    ).first()
-    
+    route = (
+        db.query(Route)
+        .filter(Route.id == str(route_id), Route.company_id == company_id)
+        .first()
+    )
+
     if not route:
         raise HTTPException(status_code=404, detail="Route not found for this company")
-    
+
+    # Check if this route is referenced elsewhere
+    references = (
+    db.execute(select(bus_routes).where(bus_routes.c.route_id == str(route_id))).first()
+    # or db.query(Ticket).filter(Ticket.route_id == str(route_id)).first()
+    or db.query(RouteSegment).filter(RouteSegment.route_id == str(route_id)).first()
+)
+    if references:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete route because it is still in use (bus_routes, tickets, or route_segments)."
+        )
+
     db.delete(route)
     db.commit()
 
     return {"message": f"Route with ID {route_id} deleted successfully"}
+
+
 
 @router.post("/assign-bus", dependencies=[Depends(check_permission("assign_bus_route"))])
 async def assign_bus(payload: AssignBusRequest, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):

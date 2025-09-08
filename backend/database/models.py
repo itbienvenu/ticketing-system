@@ -169,6 +169,7 @@ class Route(Base):
     company = relationship("Company", back_populates="routes")
     segments = relationship("RouteSegment", back_populates="route")
     buses = relationship("Bus", secondary=bus_routes, back_populates="routes")
+    tickets = relationship("Ticket", back_populates='route')
 
 # -----------------------------
 # RouteSegment (segment between two stations)
@@ -217,8 +218,10 @@ class Ticket(Base):
     bus_id = Column(String, ForeignKey("buses.id"))
     schedule_id = Column(String, ForeignKey("schedules.id"))
     company_id = Column(String, ForeignKey("companies.id"))
+    route_id = Column(String, ForeignKey("routes.id"))
     qr_code = Column(String, nullable=False)
     status = Column(String, default="booked")
+    mode = Column(String, default="active")
     created_at = Column(DateTime, default=datetime.now(UTC))
 
     user = relationship("User", back_populates="tickets")
@@ -226,3 +229,4 @@ class Ticket(Base):
     schedule = relationship("Schedule", back_populates="tickets")
     company = relationship("Company", back_populates="tickets")
     payments = relationship("Payment", back_populates="ticket")
+    route = relationship("Route", back_populates='tickets')

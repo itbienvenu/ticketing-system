@@ -188,6 +188,8 @@ async def get_ticket(ticket_id: str, db: Session = Depends(get_db), user: User =
     ).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found or does not belong to your company")
+    route = db.query(Route).filter(Route.id == ticket.route).first()
+    origin_name = ticket.route.origin.name
 
     return TicketResponse(
         id=ticket.id,
@@ -195,7 +197,8 @@ async def get_ticket(ticket_id: str, db: Session = Depends(get_db), user: User =
         qr_code=ticket.qr_code,
         status=ticket.status,
         created_at=ticket.created_at,
-        mode=ticket.mode
+        mode=ticket.mode,
+        route = {"origin":route.origin_id.name, "destination":route.destination_id.name}
     )
 
 # Soft deleting the ticket by user
