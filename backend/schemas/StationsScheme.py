@@ -18,7 +18,7 @@ class BusStationResponse(BusStationBase):
     company_id: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class RouteStationBase(BaseModel):
     stop_order: int
@@ -35,7 +35,7 @@ class RouteStationResponse(RouteStationBase):
     company_id: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 

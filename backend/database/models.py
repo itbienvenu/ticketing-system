@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table, Float, Enum
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table, Float, Enum, Boolean
 from sqlalchemy.orm import relationship
 from database.dbs import Base
 import uuid
@@ -108,8 +108,10 @@ class Company(Base):
     name = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=True)
     phone_number = Column(String, nullable=True)
+    is_verfied = Column(Boolean, default=False)
     address = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now(UTC))
+
 
     staff = relationship("User", back_populates="company")
     buses = relationship("Bus", back_populates="company")
