@@ -5,9 +5,7 @@ import uuid
 from datetime import datetime, UTC
 import enum
 
-# -----------------------------
-# Association tables
-# -----------------------------
+
 
 # roles <-> permissions (many-to-many)
 role_permissions = Table(
@@ -41,9 +39,7 @@ bus_schedules = Table(
     Column("schedule_id", String, ForeignKey("schedules.id"), primary_key=True)
 )
 
-# -----------------------------
-# User, Role, Permission
-# -----------------------------
+
 class User(Base):
     __tablename__ = "users"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -77,9 +73,7 @@ class Permission(Base):
 
     roles = relationship("Role", secondary=role_permissions, back_populates="permissions")
 
-# -----------------------------
-# Payment
-# -----------------------------
+
 class PaymentStatus(str, enum.Enum):
     pending = "pending"
     success = "success"
@@ -99,16 +93,14 @@ class Payment(Base):
     ticket = relationship("Ticket", back_populates="payments")
     user = relationship("User", back_populates="payments")
 
-# -----------------------------
-# Company
-# -----------------------------
+# Comapny model
 class Company(Base):
     __tablename__ = "companies"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=True)
     phone_number = Column(String, nullable=True)
-    is_verfied = Column(Boolean, default=False)
+    # is_verfied = Column(Boolean, default=False)
     address = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now(UTC))
 
@@ -121,9 +113,7 @@ class Company(Base):
     schedules = relationship("Schedule", back_populates="company")
     tickets = relationship("Ticket", back_populates="company")
 
-# -----------------------------
-# Bus
-# -----------------------------
+# Bus model
 class Bus(Base):
     __tablename__ = "buses"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -138,9 +128,7 @@ class Bus(Base):
     tickets = relationship("Ticket", back_populates="bus")
     routes = relationship("Route", secondary=bus_routes, back_populates="buses")
 
-# -----------------------------
-# BusStation
-# -----------------------------
+# Bus station model
 class BusStation(Base):
     __tablename__ = "bus_stations"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))

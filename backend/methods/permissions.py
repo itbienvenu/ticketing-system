@@ -34,3 +34,11 @@ def get_current_company_user(current_user: User = Depends(get_current_user)):
             detail="You are not authorized to manage company resources."
         )
     return current_user
+
+def get_current_super_admin_user(current_user: User = Depends(get_current_user)):
+    if not any(role.name == "super_admin" for role in current_user.roles):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to perform this action.",
+        )
+    return current_user

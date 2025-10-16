@@ -10,19 +10,12 @@ from schemas.CompanyScheme import CompanyCreate, CompanyResponse, UserCreate, Pa
 # from app.dependencies.dependencies import get_current_super_admin_user
 # from app.utils.auth_utils import get_password_hash
 from methods.functions import get_current_user
+from methods.permissions import get_current_super_admin_user
 from passlib.hash import bcrypt
 
 
 # Define a new router for company management
 router = APIRouter(prefix="/companies", tags=["Companies"])
-
-def get_current_super_admin_user(current_user: User = Depends(get_current_user)):
-    if not any(role.name == "super_admin" for role in current_user.roles):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to perform this action.",
-        )
-    return current_user
 
 @router.post(
     "/create_company",
@@ -101,7 +94,7 @@ async def get_all_companies(db: Session = Depends(get_db)):
     """
     Returns a list of all companies. Accessible only by a super admin.
     """
-    companies = db.query(Company).all()
+    companies = await db.query(Company).all()
     return companies
 
 @router.get(
@@ -113,7 +106,7 @@ async def get_company_by_id(company_id: str, db: Session = Depends(get_db)):
     """
     Returns a single company by its ID. Accessible only by a super admin.
     """
-    company = db.query(Company).filter(Company.id == company_id).first()
+    company = await db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     return company
@@ -123,7 +116,7 @@ async def get_company_by_id(company_id: str, db: Session = Depends(get_db)):
 @router.delete("/{company_id}", dependencies=[Depends(get_current_super_admin_user)])
 async def delete_company(company_id: str, db: Session = Depends(get_db)):
     """This action is sudo, means super users can only do this"""
-    company = db.query(Company).filter(Company.id == company_id).first()
+    company = await db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     db.delete(company)
