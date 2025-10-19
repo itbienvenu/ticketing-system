@@ -6,8 +6,6 @@ from database.dbs import get_db
 from database.models import *
 from sqlalchemy.orm import Session
 from typing import List
-
-
 router = APIRouter(prefix="/api/v1", tags=["User Managment"])
 
 @router.post("/login")
