@@ -1,0 +1,42 @@
+version: "3.9"  # latest supported format
+
+volumes:
+  postgres_data:
+
+services:
+  # PostgreSQL database
+  db:
+    image: postgres:15
+    container_name: ticketing-system-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ticketing
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+    container_name: ticketing-system-backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      # Note: 'db' is the service name of PostgreSQL
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/ticketing
+    depends_on:
+      - db
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ticketing-system-frontend
+    ports:
+      - "8088:801"
+    depends_on:
+      - backend

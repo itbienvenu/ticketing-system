@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from methods.functions import register_route, get_current_user
 from methods.permissions import check_permission
 from database.dbs import get_db
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import Session
 from schemas.RoutesScheme import RegisterRoute, RouteOut, UpdateRoute, AssignBusRequest
 from uuid import UUID
@@ -44,7 +45,7 @@ async def register_routes(
     existing_route = db.query(Route).filter(
         Route.origin_id == str(route.origin_id),
         Route.destination_id == str(route.destination_id),
-        # Route.company_id == str(company_id)
+        Route.company_id == str(company_id)
     ).first()
 
     if existing_route:
@@ -57,8 +58,8 @@ async def register_routes(
     new_route = Route(
         origin_id=str(route.origin_id),
         destination_id=str(route.destination_id),
-        # price=route.price,
-        # company_id=str(company_id)
+        price=route.price,
+        company_id=str(company_id)
     )
     db.add(new_route)
     db.commit()
@@ -69,12 +70,12 @@ async def register_routes(
         id=new_route.id,
         price=new_route.price,
         origin=origin_station.name,
+        company_id=new_route.company_id,
         destination=destination_station.name,
         created_at=new_route.created_at
     )
 
 
-from sqlalchemy.orm import joinedload
 
 @router.get("/", response_model=List[RouteOut], dependencies=[Depends(get_current_user)])
 async def get_all_routes(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
@@ -121,6 +122,7 @@ async def get_all_routes(db: Session = Depends(get_db), user: dict = Depends(get
 
 
 
+# Updating the route
 
 @router.put(
     "/{route_id}",

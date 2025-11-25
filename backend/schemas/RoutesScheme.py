@@ -7,8 +7,8 @@ from datetime import datetime, timezone
 class RegisterRoute(BaseModel):
     origin_id: UUID  # store ID, not name
     destination_id: UUID  # store ID, not name
-    # price: int
-    # company_id: Optional[UUID] = None
+    price: int
+    company_id: Optional[UUID] = None
 
 
 class RouteOut(BaseModel):
@@ -16,7 +16,7 @@ class RouteOut(BaseModel):
     origin: Optional[str] = None
     destination: Optional[str] = None
     company_id: Optional[str] = None
-    created_at: datetime
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         from_attributes = True # allows SQLAlchemy object -> Pydantic
