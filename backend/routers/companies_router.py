@@ -94,7 +94,7 @@ async def get_all_companies(db: Session = Depends(get_db)):
     """
     Returns a list of all companies. Accessible only by a super admin.
     """
-    companies = await db.query(Company).all()
+    companies = db.query(Company).all()
     return companies
 
 @router.get(
@@ -106,7 +106,7 @@ async def get_company_by_id(company_id: str, db: Session = Depends(get_db)):
     """
     Returns a single company by its ID. Accessible only by a super admin.
     """
-    company = await db.query(Company).filter(Company.id == company_id).first()
+    company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     return company
@@ -116,10 +116,59 @@ async def get_company_by_id(company_id: str, db: Session = Depends(get_db)):
 @router.delete("/{company_id}", dependencies=[Depends(get_current_super_admin_user)])
 async def delete_company(company_id: str, db: Session = Depends(get_db)):
     """This action is sudo, means super users can only do this"""
-    company = await db.query(Company).filter(Company.id == company_id).first()
+    company =  db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     db.delete(company)
     db.commit()
 
     return {"message":"Company deleted well"}
+
+
+@router.post('/company-user', dependencies=[Depends(get_current_super_admin_user)])
+async def create_company_user(
+    user_data: UserCreate,
+    db: Session = Depends(get_db)
+):  
+    """
+    Create a new user for a specific company.
+    This endpoint is for the main system admin.
+    """
+    # Check if the user's email already exists
+    if db.query(User).filter(User.email == user_data.email).first():
+        raise HTTPException(status_code=400, detail="User email already in use.")
+
+    # Check if the specified company exists
+    company = db.query(Company).filter(Company.id == user_data.company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found.")
+
+    try:
+        # Create the new user
+        hashed_password = bcrypt.hash(user_data.password)
+        new_user = User(
+            id=str(uuid.uuid4()),
+            full_name=user_data.full_name,
+            email=user_data.email,
+            phone_number=user_data.phone_number,
+            password_hash=hashed_password,
+            created_at=datetime.now(UTC),
+            company_id=user_data.company_id 
+        )
+
+        # Assign the specified role to the new user
+        role = db.query(Role).filter(Role.name == user_data.role_name).first()
+        if not role:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Role '{user_data.role_name}' not found."
+            )
+        new_user.roles.append(role)
+        db.add(new_user)
+        db.commit()
+        
+        return {"message": "User created successfully."}
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")

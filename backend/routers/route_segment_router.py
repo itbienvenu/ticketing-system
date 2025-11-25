@@ -8,7 +8,7 @@ from methods.functions import get_current_user
 
 router = APIRouter(prefix="/route_segments", tags=["RouteSegments"])
 
-# ✅ Create a new route segment
+# Create a new route segment
 @router.post("/", response_model=RouteSegmentResponse)
 def create_route_segment(segment: RouteSegmentCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     # Check route exists and belongs to user's company
@@ -35,7 +35,7 @@ def create_route_segment(segment: RouteSegmentCreate, db: Session = Depends(get_
     db.refresh(new_segment)
     return new_segment
 
-# ✅ List all segments (optional: filter by route)
+# List all segments (optional: filter by route)
 @router.get("/", response_model=List[RouteSegmentResponse])
 def list_route_segments(route_id: str = None, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     query = db.query(RouteSegment).filter(RouteSegment.company_id == current_user.company_id)
@@ -43,7 +43,7 @@ def list_route_segments(route_id: str = None, db: Session = Depends(get_db), cur
         query = query.filter(RouteSegment.route_id == route_id)
     return query.all()
 
-# ✅ Get a single segment
+# Get a single segment
 @router.get("/{segment_id}", response_model=RouteSegmentResponse)
 def get_route_segment(segment_id: str, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     segment = db.query(RouteSegment).filter(RouteSegment.id == segment_id, RouteSegment.company_id == current_user.company_id).first()
@@ -51,7 +51,7 @@ def get_route_segment(segment_id: str, db: Session = Depends(get_db), current_us
         raise HTTPException(404, "Route segment not found")
     return segment
 
-# ✅ Update a segment
+# Update a segment
 @router.put("/{segment_id}", response_model=RouteSegmentResponse)
 def update_route_segment(segment_id: str, segment_update: RouteSegmentUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     segment = db.query(RouteSegment).filter(RouteSegment.id == segment_id, RouteSegment.company_id == current_user.company_id).first()
@@ -66,7 +66,7 @@ def update_route_segment(segment_id: str, segment_update: RouteSegmentUpdate, db
     db.refresh(segment)
     return segment
 
-# ✅ Delete a segment
+# Delete a segment
 @router.delete("/{segment_id}")
 def delete_route_segment(segment_id: str, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     segment = db.query(RouteSegment).filter(RouteSegment.id == segment_id, RouteSegment.company_id == current_user.company_id).first()

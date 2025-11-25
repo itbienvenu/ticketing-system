@@ -23,6 +23,8 @@ class UserCreate(BaseModel):
     email: str
     phone_number: str
     password: str
+    role_name: str
+    company_id: Optional[str] = None
     
 class PasswordChange(BaseModel):
     old_password: str
