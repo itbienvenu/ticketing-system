@@ -60,7 +60,7 @@ class User(Base):
 class Role(Base):
     __tablename__ = "roles"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    name = Column(String, unique=True, nullable=False, default="user")
+    name = Column(String, unique=True, nullable=False)
 
     users = relationship("User", secondary=user_roles, back_populates="roles")
     permissions = relationship("Permission", secondary=role_permissions, back_populates="roles")
@@ -143,7 +143,9 @@ class BusStation(Base):
     route_segments_from = relationship("RouteSegment", back_populates="start_station", foreign_keys="RouteSegment.start_station_id")
     route_segments_to = relationship("RouteSegment", back_populates="end_station", foreign_keys="RouteSegment.end_station_id")
 
-
+# -----------------------------
+# Route (overall route)
+# -----------------------------
 class Route(Base):
     __tablename__ = "routes"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))

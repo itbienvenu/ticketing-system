@@ -40,11 +40,11 @@ async def register_routes(
     if not origin_station or not destination_station:
         raise HTTPException(status_code=400, detail="Invalid origin or destination station ID")
 
-    # ✅ Check for duplicates
+    # Check for duplicates
     existing_route = db.query(Route).filter(
         Route.origin_id == str(route.origin_id),
         Route.destination_id == str(route.destination_id),
-        Route.company_id == str(company_id)
+        # Route.company_id == str(company_id)
     ).first()
 
     if existing_route:
@@ -57,8 +57,8 @@ async def register_routes(
     new_route = Route(
         origin_id=str(route.origin_id),
         destination_id=str(route.destination_id),
-        price=route.price,
-        company_id=str(company_id)
+        # price=route.price,
+        # company_id=str(company_id)
     )
     db.add(new_route)
     db.commit()

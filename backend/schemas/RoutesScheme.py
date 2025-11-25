@@ -7,8 +7,8 @@ from datetime import datetime, timezone
 class RegisterRoute(BaseModel):
     origin_id: UUID  # store ID, not name
     destination_id: UUID  # store ID, not name
-    price: int
-    company_id: Optional[UUID] = None
+    # price: int
+    # company_id: Optional[UUID] = None
 
 
 class RouteOut(BaseModel):
