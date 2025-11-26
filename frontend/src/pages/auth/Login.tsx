@@ -25,28 +25,40 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <h2>Login</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password_hash"
-          placeholder="Password"
-          value={form.password_hash}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg border border-gray-200">
+        <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">Login</h2>
+        {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <input
+            type="password"
+            name="password_hash"
+            placeholder="Password"
+            value={form.password_hash}
+            onChange={handleChange}
+            required
+            className="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <button
+            type="submit"
+            className="py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors"
+          >
+            Login
+          </button>
+        </form>
+        <p className="mt-4 text-center text-black text-sm">
+          Don't have an account? <a href='/register' className="text-blue-600 cursor-pointer">Sign up</a>
+        </p>
+      </div>
     </div>
   );
 };
