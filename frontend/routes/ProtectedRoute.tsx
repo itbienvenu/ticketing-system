@@ -1,14 +1,18 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  allowedRoles?: string[]; // e.g., ['superadmin', 'companyadmin']
+  allowedRoles?: string[];
 }
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { user, token } = useAuth();
+  const { user, token, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   // If not logged in, redirect to login
   if (!token || !user) {

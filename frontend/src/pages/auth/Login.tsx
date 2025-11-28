@@ -1,14 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import type { LoginUser } from '../../types/user';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, getme } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState<LoginUser>({ email: '', password_hash: '' });
   const [error, setError] = useState('');
+  const [token, setToken] = useState('');
+
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('token')
+    if (!accessToken) return 
+    setToken(accessToken);
+  }, [])
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -18,7 +27,18 @@ const Login = () => {
     e.preventDefault();
     try {
       await login(form);
-      navigate('/dashboard'); // Redirect after login
+      /// get access token
+
+      const my_data = await getme(token);
+
+      if(my_data.role='super_admin'){
+        navigate('/superadmin/dashboard'); // Redirect to the super admin dashboard
+      } else if(my_data.role='company_user') {
+        navigate('/company/dashboard')
+      } else {
+        navigate('/user/dashboard')
+      }
+
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed');
     }

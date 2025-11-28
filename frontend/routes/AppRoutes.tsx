@@ -1,7 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from '../src/pages/auth/Login';
 import Register from '../src/pages/auth/Register';
-import NotFound from '../src/pages/NotFound'
+import NotFound from '../src/pages/NotFound';
 import SuperAdminDashboard from '../src/pages/superAdmin/Dashboard';
 import CompanyAdminDashboard from '../src/pages/companyAdmin/Dashboard';
 import UserDashboard from '../src/pages/user/Dashboard';
@@ -9,32 +9,29 @@ import ProtectedRoute from './ProtectedRoute';
 
 const AppRoutes = () => {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Super Admin */}
         <Route
           path="/superadmin/dashboard"
           element={
-            <ProtectedRoute allowedRoles={['superadmin']}>
+            <ProtectedRoute allowedRoles={['super_admin']}>
               <SuperAdminDashboard />
             </ProtectedRoute>
           }
         />
 
-        {/* Company Admin */}
         <Route
           path="/company/dashboard"
           element={
-            <ProtectedRoute allowedRoles={['companyadmin']}>
+            <ProtectedRoute allowedRoles={['company_admin', 'company_user']}>
               <CompanyAdminDashboard />
             </ProtectedRoute>
           }
         />
 
-        {/* User */}
         <Route
           path="/user/dashboard"
           element={
@@ -44,10 +41,9 @@ const AppRoutes = () => {
           }
         />
 
-        {/* 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 };
 

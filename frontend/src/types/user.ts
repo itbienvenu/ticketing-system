@@ -17,6 +17,7 @@ export interface UserOut {
   email: string;
   phone_number?: string;
   role?: string;
+  roles?: string[];
 }
 
 export interface UpdateUser {

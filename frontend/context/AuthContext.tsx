@@ -1,4 +1,4 @@
-import  { createContext, useContext, useState } from 'react';
+import  { createContext, use, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { UserOut, LoginUser, RegisterUser } from '../src/types/user';
 import  { loginUser, registerUser, getMe } from '../src/api/auth';
@@ -6,8 +6,10 @@ import  { loginUser, registerUser, getMe } from '../src/api/auth';
 interface AuthContextType {
   user: UserOut | null;
   token: string | null;
+  loading: boolean;
   login: (data: LoginUser) => Promise<void>;
   register: (data: RegisterUser) => Promise<void>;
+  getme: (token: string) => Promise<UserOut>;
   logout: () => void;
 }
 
@@ -16,19 +18,49 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserOut | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [loading, setLoading] = useState<boolean>(true);
+  
+useEffect(() => {
+  const checkAuth = async () => {
+    try {
+      setLoading(true);
+      if (token) {
+        const userData = await getMe(token);
+        setUser(userData);
+      }
+    } catch (error) {
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('token');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  checkAuth();
+}, []);
 
   const login = async (data: LoginUser) => {
+    setLoading(true);
     const res = await loginUser(data);
-    setUser(res.user);
     setToken(res.access_token);
     localStorage.setItem('token', res.access_token);
+
+    await getme(res.access_token); 
+    setLoading(false);
   };
 
+  const getme = async (token: string) => {
+    const res = await getMe(token); 
+    setUser(res);
+    return res;
+  }
+
+
   const register = async (data: RegisterUser) => {
-    const res = await registerUser(data);
-    // Optionally log in immediately after registration
-    await login({ email: res.email, password_hash: data.password });
+    await registerUser(data);
   };
+
 
   const logout = () => {
     setUser(null);
@@ -37,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, getme, loading }}>
       {children}
     </AuthContext.Provider>
   );
