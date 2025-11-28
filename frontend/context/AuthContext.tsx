@@ -25,7 +25,7 @@ useEffect(() => {
     try {
       setLoading(true);
       if (token) {
-        const userData = await getMe(token);
+        const userData = await getMe();
         setUser(userData);
       }
     } catch (error) {
@@ -46,12 +46,12 @@ useEffect(() => {
     setToken(res.access_token);
     localStorage.setItem('token', res.access_token);
 
-    await getme(res.access_token); 
+    await getme(); 
     setLoading(false);
   };
 
-  const getme = async (token: string) => {
-    const res = await getMe(token); 
+  const getme = async () => {
+    const res = await getMe(); 
     setUser(res);
     return res;
   }

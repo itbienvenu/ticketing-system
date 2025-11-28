@@ -6,7 +6,7 @@ from database.models import Schedule, Bus, RouteSegment
 from schemas.SchedulesScheme import ScheduleCreate, ScheduleResponse
 from methods.functions import get_current_user
 
-router = APIRouter(prefix="/schedules", tags=["Schedules"])
+router = APIRouter(prefix="/api/v1/schedules", tags=["Schedules"])
 
 #  Create a new schedule
 @router.post("/", response_model=ScheduleResponse)

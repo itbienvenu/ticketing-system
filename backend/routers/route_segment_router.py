@@ -6,7 +6,7 @@ from database.models import RouteSegment, Route, BusStation, Company
 from schemas.RouteSegmentScheme import RouteSegmentCreate, RouteSegmentUpdate, RouteSegmentResponse
 from methods.functions import get_current_user
 
-router = APIRouter(prefix="/route_segments", tags=["RouteSegments"])
+router = APIRouter(prefix="/api/v1/route_segments", tags=["RouteSegments"])
 
 # Create a new route segment
 @router.post("/", response_model=RouteSegmentResponse)

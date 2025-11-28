@@ -15,7 +15,7 @@ from passlib.hash import bcrypt
 
 
 # Define a new router for company management
-router = APIRouter(prefix="/companies", tags=["Companies"])
+router = APIRouter(prefix="/api/v1/companies", tags=["Companies"])
 
 @router.post(
     "/create_company",
